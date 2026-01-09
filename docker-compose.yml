@@ -1,0 +1,130 @@
+name: cinasocial_infra
+version: '3.8'
+
+services:
+  # 1. MESSAGE BROKER [cite: 34]
+  kafka:
+    image: 'bitnami/kafka:3.8.0'
+    container_name: cina-kafka
+    hostname: kafka
+    restart: unless-stopped
+    ports:
+      - '9094:9094'
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    networks:
+      - cina-net
+
+  # 2. CACHE & LOCK [cite: 35]
+  redis:
+    image: 'redis:7.2-alpine'
+    container_name: cina-redis
+    hostname: redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: redis-server --requirepass supersecretpassword
+    networks:
+      - cina-net
+
+  # 3. RELATIONAL DB [cite: 35]
+  # Quan trọng: Đã thêm config binlog để Debezium hoạt động được 
+  mysql:
+    image: 'mysql:8.0.36-debian'
+    container_name: cina-mysql
+    hostname: mysql
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    # Cấu hình cần thiết cho Debezium (CDC): row-based logging
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cina-net
+
+  # 4. STORAGE (MEDIA SERVICE) [cite: 22, 36]
+  minio:
+    image: 'minio/minio:latest'
+    container_name: cina-minio
+    hostname: minio
+    restart: unless-stopped
+    ports:
+      - '9000:9000' # API
+      - '9001:9001' # Console UI
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - cina-net
+
+  # 5. SEARCH ENGINE [cite: 28, 38]
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.10'
+    container_name: cina-elastic
+    hostname: elasticsearch
+    restart: unless-stopped
+    ports:
+      - '9200:9200'
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Giới hạn RAM để máy local không bị đơ
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    networks:
+      - cina-net
+
+
+  # 6. CDC / SYNC (DATA CONSISTENCY) 
+  debezium:
+    image: 'debezium/connect:2.5'
+    container_name: cina-debezium
+    hostname: debezium
+    restart: unless-stopped
+    ports:
+      - '8083:8083'
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+    depends_on:
+      - kafka
+      - mysql
+    networks:
+      - cina-net
+
+  # 7. TRACING [cite: 37, 87]
+  zipkin:
+    image: 'openzipkin/zipkin'
+    container_name: cina-zipkin
+    ports:
+      - '9411:9411'
+    networks:
+      - cina-net
+
+volumes:
+  mysql_data:
+  minio_data:
+  elastic_data:
+
+networks:
+  cina-net:
+    driver: bridge
