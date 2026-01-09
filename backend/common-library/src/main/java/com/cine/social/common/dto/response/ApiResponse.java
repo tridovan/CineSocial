@@ -1,7 +1,7 @@
 package com.cine.social.common.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.cine.social.common.exception.ErrorCode;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

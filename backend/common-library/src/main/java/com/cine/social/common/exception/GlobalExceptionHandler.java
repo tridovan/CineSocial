@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handlingRuntimeException(RuntimeException exception) {
         log.error("Exception: ", exception);
-        return ResponseEntity.badRequest().body(ApiResponse.error(ErrorCode.UNCATEGORIZED_EXCEPTION));
+        return ResponseEntity.badRequest().body(ApiResponse.error(CommonErrorCode.UNCATEGORIZED_EXCEPTION));
     }
 
     @ExceptionHandler(value = AppException.class)
@@ -32,14 +32,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = AccessDeniedException.class)
     ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {
-        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+        CommonErrorCode errorCode = CommonErrorCode.UNAUTHORIZED;
         return ResponseEntity.status(errorCode.getStatusCode())
                 .body(ApiResponse.error(errorCode));
     }
 
     @ExceptionHandler(value = BadCredentialsException.class)
-    ResponseEntity<ApiResponse> handlingBadCredentialsException(AccessDeniedException exception) {
-        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+    ResponseEntity<ApiResponse> handlingBadCredentialsException(BadCredentialsException exception) {
+        CommonErrorCode errorCode = CommonErrorCode.UNAUTHORIZED;
         return ResponseEntity.status(errorCode.getStatusCode())
                 .body(ApiResponse.error(errorCode));
     }
@@ -54,11 +54,11 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
         ApiResponse<Map<String, String>> apiResponse = ApiResponse.<Map<String, String>>builder()
-                .code(ErrorCode.VALIDATION_ERROR.getCode())
-                .message(ErrorCode.VALIDATION_ERROR.getMessage())
+                .code(CommonErrorCode.VALIDATION_ERROR.getCode())
+                .message(CommonErrorCode.VALIDATION_ERROR.getMessage())
                 .data(errors)
                 .build();
 
-        return ResponseEntity.status(ErrorCode.VALIDATION_ERROR.getStatusCode()).body(apiResponse);
+        return ResponseEntity.status(CommonErrorCode.VALIDATION_ERROR.getStatusCode()).body(apiResponse);
     }
 }

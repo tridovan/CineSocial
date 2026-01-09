@@ -2,7 +2,7 @@ package com.cine.social.common.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.cine.social.common.dto.response.ApiResponse;
-import com.cine.social.common.exception.ErrorCode;
+import com.cine.social.common.exception.CommonErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,15 +22,15 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(
             HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
-        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+        CommonErrorCode errorCode = CommonErrorCode.UNAUTHENTICATED;
 
         Throwable cause = authException.getCause();
 
         if (cause instanceof JwtException) {
             if (cause.getMessage().contains("Jwt expired")) {
-                errorCode = ErrorCode.ACCESS_TOKEN_EXPIRED;
+                errorCode = CommonErrorCode.ACCESS_TOKEN_EXPIRED;
             } else {
-                errorCode = ErrorCode.INVALID_TOKEN;
+                errorCode = CommonErrorCode.INVALID_TOKEN;
             }
         }
 

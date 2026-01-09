@@ -10,7 +10,6 @@ import com.cine.social.common.security.JwtAuthenticationEntryPoint;
 @AutoConfiguration
 @EnableConfigurationProperties(SecurityProperties.class)
 @Import({
-    SecurityProperties.class,
     SharedSecurityConfig.class,
     CustomJwtDecoder.class,
     JwtAuthenticationEntryPoint.class,

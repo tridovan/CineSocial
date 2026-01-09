@@ -14,6 +14,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -30,6 +32,7 @@ public class SharedSecurityConfig {
     ) throws Exception {
 
         String[] publicPost = securityProperties.getPublicPostEndpoints().toArray(new String[0]);
+
         String[] publicGet = securityProperties.getPublicGetEndpoints().toArray(new String[0]);
 
         http.csrf(AbstractHttpConfigurer::disable)
