@@ -11,7 +11,7 @@ import com.cine.social.identity.dto.response.OutboundUserResponse;
 import com.cine.social.identity.dto.response.UserResponse;
 import com.cine.social.identity.entity.Role;
 import com.cine.social.identity.entity.User;
-import com.cine.social.identity.exception.IdentityErrorCode;
+import com.cine.social.identity.constant.IdentityErrorCode;
 import com.cine.social.identity.httpclient.OutboundIdentityClient;
 import com.cine.social.identity.httpclient.OutboundUserClient;
 import com.cine.social.identity.mapper.UserMapper;
@@ -87,7 +87,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String generateToken(User user) {
-        return generateToken(user.getEmail(), user.getRoles().stream()
+        return generateToken(user.getId(), user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.joining(" ")));
     }

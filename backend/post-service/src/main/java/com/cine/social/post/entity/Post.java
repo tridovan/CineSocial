@@ -27,8 +27,8 @@ public class Post {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    @Column(name = "img_url")
+    private String imgUrl;
 
     @Column(name = "user_id", nullable = false)
     private String userId;

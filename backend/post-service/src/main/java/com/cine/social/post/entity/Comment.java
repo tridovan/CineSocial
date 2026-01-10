@@ -50,8 +50,8 @@ public class Comment {
     @Column(name = "author_id", nullable = false)
     private String authorId;
 
-    @JoinColumn(name = "reply_to_user_id")
-    private String replyToUser;
+    @Column(name = "reply_to_user_id")
+    private String replyToUserId;
 
     @Column(name = "reply_count")
     @Builder.Default
@@ -65,5 +65,5 @@ public class Comment {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 }
