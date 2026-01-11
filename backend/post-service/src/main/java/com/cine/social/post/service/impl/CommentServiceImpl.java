@@ -4,6 +4,7 @@ import com.cine.social.common.dto.response.PageResponse;
 import com.cine.social.common.exception.AppException;
 import com.cine.social.common.utils.PageHelper;
 import com.cine.social.common.utils.SecurityUtils;
+import com.cine.social.event.MinioFileDeletionEvent;
 import com.cine.social.post.constant.PostErrorCode;
 import com.cine.social.post.dto.request.CommentRequest;
 import com.cine.social.post.dto.response.CommentResponse;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,9 @@ public class CommentServiceImpl implements CommentService {
     private final CommentVoteRepository commentVoteRepository;
     private final PostRepository postRepository;
     private final CommentMapper commentMapper;
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
 
 
     @Override
@@ -104,7 +109,20 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(String commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new AppException(PostErrorCode.COMMENT_NOT_FOUND));
         commentRepository.delete(comment);
+        deleteFileIfResourcePresent(comment);
     }
+
+
+
+    private void deleteFileIfResourcePresent(Comment comment){
+        if(Strings.isNotBlank(comment.getImgUrl())) {
+            MinioFileDeletionEvent event = MinioFileDeletionEvent.builder()
+                    .objectName(comment.getImgUrl())
+                    .build();
+            kafkaTemplate.send(FILE_DELETION_TOPIC, event);
+        }
+    }
+
 
     @Override
     public void updateComment(String id, String content) {

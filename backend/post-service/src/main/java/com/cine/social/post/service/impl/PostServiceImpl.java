@@ -5,6 +5,7 @@ import com.cine.social.common.exception.AppException;
 import com.cine.social.common.exception.CommonErrorCode;
 import com.cine.social.common.utils.PageHelper;
 import com.cine.social.common.utils.SecurityUtils;
+import com.cine.social.event.MinioFileDeletionEvent;
 import com.cine.social.event.PostCreatedEvent;
 import com.cine.social.post.constant.PostErrorCode;
 import com.cine.social.post.constant.PostStatus;
@@ -38,8 +39,9 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final PostVoteRepository postVoteRepository;
-    private final KafkaTemplate<String, PostCreatedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final static String POST_TOPIC = "post-created-topic";
+    private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
 
     @Override
     @Transactional
@@ -170,6 +172,16 @@ public class PostServiceImpl implements PostService {
     public void deletePost(String postId) {
         Post post = findPostByIdOrThrowException(postId);
         postRepository.delete(post);
+        deleteFileIfResourcePresent(post);
+
+    }
+    private void deleteFileIfResourcePresent(Post post){
+        if(Strings.isNotBlank(post.getResourceUrl())) {
+            MinioFileDeletionEvent event = MinioFileDeletionEvent.builder()
+                    .objectName(post.getResourceUrl())
+                    .build();
+            kafkaTemplate.send(FILE_DELETION_TOPIC, event);
+        }
     }
 
     

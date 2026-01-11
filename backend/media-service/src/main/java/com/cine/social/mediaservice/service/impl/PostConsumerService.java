@@ -2,7 +2,9 @@ package com.cine.social.mediaservice.service.impl;
 
 
 import com.cine.social.event.MediaProcessedEvent;
+import com.cine.social.event.MinioFileDeletionEvent;
 import com.cine.social.event.PostCreatedEvent;
+import com.cine.social.mediaservice.service.MediaService;
 import com.cine.social.mediaservice.service.VideoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final VideoService videoService;
+    private final MediaService mediaService;
 
     @KafkaListener(topics = "post-created-topic", groupId = "media-group")
     public void handlePostCreated(PostCreatedEvent event) {
@@ -30,6 +33,18 @@ import org.springframework.stereotype.Service;
         } catch (Exception e) {
             log.error("Video processing failed for Post ID: {}", event.getPostId(), e);
             sendEvent(event.getPostId(), "FAILED", null);
+        }
+
+    }
+
+    @KafkaListener(topics = "file-deletion-topic", groupId = "media-group")
+    public void handleFileDeletion(MinioFileDeletionEvent event){
+        log.info("Received File Deletion event for File name: {}", event.getObjectName());
+
+        try {
+            mediaService.deleteFromMinIO(event.getObjectName());
+        } catch (Exception e) {
+            log.error("File deletion failed for File name: {}", event.getObjectName(), e);
         }
 
     }

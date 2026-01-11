@@ -3,9 +3,14 @@ server:
   servlet:
     context-path: /media/api/v1
 
+
 spring:
   application:
     name: media-service
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   kafka:
     bootstrap-servers: localhost:9094
     consumer:

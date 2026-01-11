@@ -5,14 +5,21 @@ import com.cine.social.mediaservice.constant.MediaErrorCode;
 import com.cine.social.mediaservice.dto.response.MediaResponse;
 import com.cine.social.mediaservice.property.MinioProperty;
 import com.cine.social.mediaservice.service.MediaService;
+import io.minio.DeleteObjectTagsArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
+import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 @Service
@@ -92,5 +99,14 @@ public class MediaServiceImpl implements MediaService {
             log.error("File upload to MinIO failed: {}", objectName, e);
             throw new AppException(MediaErrorCode.UPLOAD_FAILED);
         }
+    }
+
+    @Override
+    @SneakyThrows
+    public void deleteFromMinIO(String objectName){
+        minioClient.removeObject(RemoveObjectArgs.builder()
+                        .bucket(minioProperty.getBucket())
+                        .object(objectName)
+                .build());
     }
 }

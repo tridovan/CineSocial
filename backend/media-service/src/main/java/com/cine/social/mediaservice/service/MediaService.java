@@ -7,4 +7,5 @@ public interface MediaService {
 
     MediaResponse uploadImage(MultipartFile file);
     MediaResponse uploadVideo(MultipartFile file);
+    void deleteFromMinIO(String objectName);
 }

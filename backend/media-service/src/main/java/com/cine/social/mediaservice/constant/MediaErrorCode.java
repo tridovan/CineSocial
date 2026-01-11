@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatusCode;
 public enum MediaErrorCode implements ErrorCode {
     INVALID_FILE(8300,"Invalid file", HttpStatus.BAD_REQUEST ),
     EMPTY_FILE(8301, "File is empty" ,HttpStatus.BAD_REQUEST),
-    UPLOAD_FAILED(8302,"There are something wrong with upload file" , HttpStatus.INTERNAL_SERVER_ERROR);
+    UPLOAD_FAILED(8302,"There are something wrong with upload file" , HttpStatus.INTERNAL_SERVER_ERROR),
+    DELETE_FAILED(8303,"File deletion from MinIO failed" , HttpStatus.INTERNAL_SERVER_ERROR );
 
 
 
