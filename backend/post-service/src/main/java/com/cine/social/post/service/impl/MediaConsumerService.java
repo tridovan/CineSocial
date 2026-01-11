@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PostConsumerService {
+public class MediaConsumerService {
 
     private final PostRepository postRepository;
 
