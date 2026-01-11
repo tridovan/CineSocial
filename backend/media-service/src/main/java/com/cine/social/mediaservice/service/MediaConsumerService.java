@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class MediaConsumerService {
+    public class MediaConsumerService {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -22,9 +22,9 @@ public class MediaConsumerService {
         log.info("Received event for Post ID: {}", event.getPostId());
 
         try {
-            // GIẢ LẬP QUÁ TRÌNH NÉN VIDEO (SIMULATION)
-            // Vì tích hợp FFmpeg thật rất dễ lỗi môi trường, ở bước này ta giả lập trước
-            // để đảm bảo Saga flow chạy thông suốt.
+            if (event.getResourceUrl().contains("error")) {
+                throw new RuntimeException("Simulated FFmpeg Error!");
+            }
 
             log.info("Starting video encoding for: {}", event.getResourceUrl());
 
@@ -37,23 +37,24 @@ public class MediaConsumerService {
             log.info("Video encoding completed. Sending success event.");
 
             // Bắn sự kiện "Xong rồi" ngược lại Kafka
-            MediaProcessedEvent successEvent = MediaProcessedEvent.builder()
-                    .postId(event.getPostId())
-                    .status("DONE")
-                    .processedUrl(processedUrl)
-                    .build();
+            sendEvent(event.getPostId(), "DONE", processedUrl);
 
-            kafkaTemplate.send("media-processed-topic", successEvent);
-
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             log.error("Video processing failed for Post ID: {}", event.getPostId(), e);
 
             // Nếu lỗi -> Bắn sự kiện Failed
-            MediaProcessedEvent failedEvent = MediaProcessedEvent.builder()
-                    .postId(event.getPostId())
-                    .status("FAILED")
-                    .build();
-            kafkaTemplate.send("media-processed-topic", failedEvent);
+            sendEvent(event.getPostId(), "FAILED", null);
         }
+
+
+    }
+
+    private void sendEvent(String postId, String status, String url) {
+        MediaProcessedEvent resultEvent = MediaProcessedEvent.builder()
+                .postId(postId)
+                .status(status)
+                .processedUrl(url)
+                .build();
+        kafkaTemplate.send("media-processed-topic", resultEvent);
     }
 }
