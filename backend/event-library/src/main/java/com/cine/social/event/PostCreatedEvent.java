@@ -1,4 +1,4 @@
-package com.cine.social.post.dto.kafka;
+package com.cine.social.event;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
