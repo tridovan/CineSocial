@@ -2,7 +2,7 @@ name: cinasocial_infra
 version: '3.8'
 
 services:
-  # 1. MESSAGE BROKER [cite: 34]
+  # 1. MESSAGE BROKER
   kafka:
     image: 'bitnami/kafka:3.8.0'
     container_name: cina-kafka
@@ -21,50 +21,37 @@ services:
     networks:
       - cina-net
 
-  # 2. CACHE & LOCK [cite: 35]
-  redis:
-    image: 'redis:7.2-alpine'
-    container_name: cina-redis
-    hostname: redis
-    restart: unless-stopped
-    ports:
-      - '6379:6379'
-    command: redis-server --requirepass supersecretpassword
-    networks:
-      - cina-net
-
-  # 3. RELATIONAL DB [cite: 35]
-  # Quan trọng: Đã thêm config binlog để Debezium hoạt động được 
+  # 2. RELATIONAL DB
   mysql:
     image: 'mysql:8.0.36-debian'
     container_name: cina-mysql
-    hostname: mysql
     restart: unless-stopped
-    ports:
-      - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=root
-    # Cấu hình cần thiết cho Debezium (CDC): row-based logging
     command:
       - --default-authentication-plugin=mysql_native_password
       - --server-id=1
       - --log-bin=mysql-bin
       - --binlog-format=ROW
+      - --binlog-row-image=FULL
+      - --binlog-expire-logs-seconds=604800
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - cina-net
 
-  # 4. STORAGE (MEDIA SERVICE) [cite: 22, 36]
+  # 3. STORAGE (MEDIA SERVICE)
   minio:
     image: 'minio/minio:latest'
     container_name: cina-minio
     hostname: minio
     restart: unless-stopped
     ports:
-      - '9000:9000' # API
-      - '9001:9001' # Console UI
+      - '9000:9000'
+      - '9001:9001'
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
@@ -74,7 +61,7 @@ services:
     networks:
       - cina-net
 
-  # 5. SEARCH ENGINE [cite: 28, 38]
+  # 4. SEARCH ENGINE
   elasticsearch:
     image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.10'
     container_name: cina-elastic
@@ -84,14 +71,13 @@ services:
       - '9200:9200'
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Giới hạn RAM để máy local không bị đơ
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - elastic_data:/usr/share/elasticsearch/data
     networks:
       - cina-net
 
-
-  # 6. CDC / SYNC (DATA CONSISTENCY) 
+  # 5. CDC / SYNC
   debezium:
     image: 'debezium/connect:2.5'
     container_name: cina-debezium
@@ -108,15 +94,6 @@ services:
     depends_on:
       - kafka
       - mysql
-    networks:
-      - cina-net
-
-  # 7. TRACING [cite: 37, 87]
-  zipkin:
-    image: 'openzipkin/zipkin'
-    container_name: cina-zipkin
-    ports:
-      - '9411:9411'
     networks:
       - cina-net
 
