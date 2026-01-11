@@ -21,4 +21,6 @@ public interface PostService {
     PageResponse<List<PostResponse>> getMyPosts(int page, int size);
 
     PageResponse<List<PostResponse>> getPosts(int page, int size);
+
+    void retryPost(String postId);
 }

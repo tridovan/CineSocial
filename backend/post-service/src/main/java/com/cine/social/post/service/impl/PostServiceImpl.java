@@ -2,6 +2,7 @@ package com.cine.social.post.service.impl;
 
 import com.cine.social.common.dto.response.PageResponse;
 import com.cine.social.common.exception.AppException;
+import com.cine.social.common.exception.CommonErrorCode;
 import com.cine.social.common.utils.PageHelper;
 import com.cine.social.common.utils.SecurityUtils;
 import com.cine.social.event.PostCreatedEvent;
@@ -96,6 +97,7 @@ public class PostServiceImpl implements PostService {
         return buildPostPageResponse(postsPage, page, size, currentUserId);
     }
 
+
     @Override
     @Transactional
     public PostResponse createPost(PostCreationRequest request) {
@@ -120,15 +122,39 @@ public class PostServiceImpl implements PostService {
 
         Post savedPost = postRepository.save(post);
         if (ResourceType.VIDEO.equals(type)) {
-            PostCreatedEvent event = PostCreatedEvent.builder()
-                    .postId(savedPost.getId())
-                    .resourceUrl(savedPost.getResourceUrl())
-                    .build();
-            kafkaTemplate.send(POST_TOPIC, event);
-            log.info("Sending event {} to topic {}", event.getPostId(), POST_TOPIC);
+            createAndSendEvent(savedPost.getId(), savedPost.getResourceUrl());
         }
 
         return postMapper.toResponse(savedPost);
+    }
+
+
+    @Override
+    public void retryPost(String postId) {
+        Post post = findPostByIdOrThrowException(postId);
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        if(!post.getUserId().equals(currentUserId)){
+            throw new AppException(PostErrorCode.UNAUTHORIZED);
+        }
+        if(!post.getResourceType().equals(ResourceType.VIDEO)){
+            throw new AppException(PostErrorCode.INVALID_RESOURCE_DATA);
+        }
+
+        post.setStatus(PostStatus.PENDING_MEDIA);
+        postRepository.save(post);
+
+        createAndSendEvent(post.getId(), post.getResourceUrl());
+    }
+
+
+    private void createAndSendEvent(String postId, String resourceUrl){
+        PostCreatedEvent event = PostCreatedEvent.builder()
+                .postId(postId)
+                .resourceUrl(resourceUrl)
+                .build();
+        kafkaTemplate.send(POST_TOPIC, event);
+        log.info("Sending event {} to topic {}", event.getPostId(), POST_TOPIC);
+
     }
     
 
@@ -142,7 +168,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePost(String postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new AppException(PostErrorCode.POST_NOT_FOUND));
+        Post post = findPostByIdOrThrowException(postId);
         postRepository.delete(post);
     }
 

@@ -13,7 +13,7 @@ public enum PostErrorCode implements ErrorCode {
     COMMENT_NOT_SAME_THE_POST(8203,"Comment not in the same post" , HttpStatus.BAD_REQUEST),
     INVALID_COMMENT(8204, "There are no content or image in comment", HttpStatus.BAD_REQUEST),
     INVALID_RESOURCE_DATA(8205, "Invalid resource data", HttpStatus.BAD_REQUEST),
-    ;
+    UNAUTHORIZED(8206,"You do not have permission to do this action", HttpStatus.FORBIDDEN );
 
 
 
