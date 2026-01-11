@@ -5,6 +5,7 @@ import com.cine.social.common.exception.AppException;
 import com.cine.social.common.utils.PageHelper;
 import com.cine.social.common.utils.SecurityUtils;
 import com.cine.social.post.constant.PostErrorCode;
+import com.cine.social.post.constant.ResourceType;
 import com.cine.social.post.dto.request.PostCreationRequest;
 import com.cine.social.post.dto.request.PostUpdateRequest;
 import com.cine.social.post.dto.response.PostResponse;
@@ -94,7 +95,8 @@ public class PostServiceImpl implements PostService {
         Post post = Post.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
-                .imgUrl(request.getImgUrl())
+                .resourceUrl(request.getResourceUrl())
+                .resourceType(ResourceType.valueOf(request.getResourceType()))
                 .userId(currentUserId)
                 .build();
 
@@ -150,4 +152,5 @@ public class PostServiceImpl implements PostService {
                 .items(responseItems)
                 .build();
     }
+
 }

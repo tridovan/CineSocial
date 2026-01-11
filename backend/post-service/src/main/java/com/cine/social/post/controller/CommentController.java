@@ -38,8 +38,8 @@ public class CommentController {
     }
 
     @PostMapping("/{commentId}/vote")
-    public ApiResponse<Void> voteComment(@PathVariable String commentId, @RequestParam int value) {
+    public ApiResponse<String> voteComment(@PathVariable String commentId, @RequestParam int value) {
         commentService.voteComment(commentId, value);
-        return ApiResponse.success(null);
+        return ApiResponse.success("Vote comment successfully");
     }
 }

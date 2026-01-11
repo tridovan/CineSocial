@@ -1,5 +1,7 @@
 package com.cine.social.post.entity;
 
+import com.cine.social.post.constant.PostStatus;
+import com.cine.social.post.constant.ResourceType;
 import jakarta.persistence.*;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
@@ -27,8 +29,16 @@ public class Post {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(name = "img_url")
-    private String imgUrl;
+    @Column(name = "resource_url")
+    private String resourceUrl;
+
+    @Column(name = "resource_type")
+    @Enumerated(EnumType.STRING)
+    private ResourceType resourceType;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private PostStatus status;
 
     @Column(name = "user_id", nullable = false)
     private String userId;

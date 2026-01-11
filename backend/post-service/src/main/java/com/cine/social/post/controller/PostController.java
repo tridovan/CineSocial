@@ -74,8 +74,8 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/vote")
-    public ApiResponse<Void> votePost(@PathVariable String postId, @RequestParam int value) {
+    public ApiResponse<String> votePost(@PathVariable String postId, @RequestParam int value) {
         postService.votePost(postId, value);
-        return ApiResponse.success(null);
+        return ApiResponse.success("Vote Post successfully");
     }
 }
