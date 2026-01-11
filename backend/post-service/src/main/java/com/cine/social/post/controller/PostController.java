@@ -9,12 +9,9 @@ import com.cine.social.post.dto.response.CommentResponse;
 import com.cine.social.post.dto.response.PostResponse;
 import com.cine.social.post.service.CommentService;
 import com.cine.social.post.service.PostService;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -27,7 +24,7 @@ public class PostController {
     private final CommentService commentService;
 
     @PostMapping
-    public ApiResponse<PostResponse> createPost(@RequestBody PostCreationRequest request) {
+    public ApiResponse<PostResponse> createPost(@RequestBody @Valid PostCreationRequest request) {
 
         return ApiResponse.success(postService.createPost(request));
     }

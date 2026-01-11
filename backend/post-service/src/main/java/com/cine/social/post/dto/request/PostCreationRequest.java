@@ -13,11 +13,12 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostCreationRequest {
-    @NotBlank
+    @NotBlank(message = "Title is required")
     private String title;
-    @NotBlank
+    @NotBlank(message = "Content is required")
     private String content;
     private String resourceUrl;
     @Pattern(regexp = "^(IMAGE|VIDEO|NONE)$", message = "Invalid resource type. Must be IMAGE, VIDEO or NONE")
+    @NotBlank(message = "Resource type is required")
     private String resourceType;
 }

@@ -5,6 +5,7 @@ import com.cine.social.common.exception.AppException;
 import com.cine.social.common.utils.PageHelper;
 import com.cine.social.common.utils.SecurityUtils;
 import com.cine.social.post.constant.PostErrorCode;
+import com.cine.social.post.constant.PostStatus;
 import com.cine.social.post.constant.ResourceType;
 import com.cine.social.post.dto.request.PostCreationRequest;
 import com.cine.social.post.dto.request.PostUpdateRequest;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -83,22 +85,32 @@ public class PostServiceImpl implements PostService {
     public PageResponse<List<PostResponse>> getPosts(int page, int size) {
         String currentUserId = SecurityUtils.getCurrentUserId();
         Pageable pageable = PageHelper.pageEngine(page, size, "createdAt:desc");
-        Page<Post> postsPage = postRepository.findAll(pageable);
+        Page<Post> postsPage = postRepository.findAllByStatus(PostStatus.PUBLISHED, pageable);
         return buildPostPageResponse(postsPage, page, size, currentUserId);
     }
 
     @Override
     @Transactional
     public PostResponse createPost(PostCreationRequest request) {
+        validateResourceIntegrity(request);
+
         String currentUserId = SecurityUtils.getCurrentUserId();
+        ResourceType type = ResourceType.valueOf(request.getResourceType());
 
         Post post = Post.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
                 .resourceUrl(request.getResourceUrl())
-                .resourceType(ResourceType.valueOf(request.getResourceType()))
+                .resourceType(type)
                 .userId(currentUserId)
                 .build();
+
+        if (ResourceType.VIDEO.equals(type)) {
+            post.setStatus(PostStatus.PENDING_MEDIA);
+            //kafka
+        } else {
+            post.setStatus(PostStatus.PUBLISHED);
+        }
 
         Post savedPost = postRepository.save(post);
         return postMapper.toResponse(savedPost);
@@ -151,6 +163,30 @@ public class PostServiceImpl implements PostService {
                 .totalElement(postsPage.getTotalElements())
                 .items(responseItems)
                 .build();
+    }
+
+    private void validateResourceIntegrity(PostCreationRequest request) {
+        if (Objects.isNull(request.getResourceType())) {
+            throw new AppException(PostErrorCode.INVALID_RESOURCE_DATA);
+        }
+
+        ResourceType type;
+        try {
+            type = ResourceType.valueOf(request.getResourceType());
+        } catch (IllegalArgumentException e) {
+            throw new AppException(PostErrorCode.INVALID_RESOURCE_DATA);
+        }
+
+        String url = request.getResourceUrl();
+        boolean hasUrl = StringUtils.hasText(url);
+
+        if ((ResourceType.VIDEO.equals(type) || ResourceType.IMAGE.equals(type)) && !hasUrl) {
+            throw new AppException(PostErrorCode.INVALID_RESOURCE_DATA);
+        }
+
+        if (ResourceType.NONE.equals(type) && hasUrl) {
+            throw new AppException(PostErrorCode.INVALID_RESOURCE_DATA);
+        }
     }
 
 }
