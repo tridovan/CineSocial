@@ -7,6 +7,8 @@ import com.cine.social.common.utils.SecurityUtils;
 import com.cine.social.post.constant.PostErrorCode;
 import com.cine.social.post.constant.PostStatus;
 import com.cine.social.post.constant.ResourceType;
+import com.cine.social.post.controller.PostController;
+import com.cine.social.post.dto.kafka.PostCreatedEvent;
 import com.cine.social.post.dto.request.PostCreationRequest;
 import com.cine.social.post.dto.request.PostUpdateRequest;
 import com.cine.social.post.dto.response.PostResponse;
@@ -17,9 +19,11 @@ import com.cine.social.post.repository.PostRepository;
 import com.cine.social.post.repository.PostVoteRepository;
 import com.cine.social.post.service.PostService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,10 +32,13 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final PostVoteRepository postVoteRepository;
+    private final KafkaTemplate<String, PostCreatedEvent> kafkaTemplate;
+    private final static String POST_TOPIC = "post-created-topic";
 
     @Override
     @Transactional
@@ -107,12 +114,20 @@ public class PostServiceImpl implements PostService {
 
         if (ResourceType.VIDEO.equals(type)) {
             post.setStatus(PostStatus.PENDING_MEDIA);
-            //kafka
         } else {
             post.setStatus(PostStatus.PUBLISHED);
         }
 
         Post savedPost = postRepository.save(post);
+        if (ResourceType.VIDEO.equals(type)) {
+            PostCreatedEvent event = PostCreatedEvent.builder()
+                    .postId(savedPost.getId())
+                    .resourceUrl(savedPost.getResourceUrl())
+                    .build();
+            kafkaTemplate.send(POST_TOPIC, event);
+            log.info("Sending event {} to topic {}", event.getPostId(), POST_TOPIC);
+        }
+
         return postMapper.toResponse(savedPost);
     }
     

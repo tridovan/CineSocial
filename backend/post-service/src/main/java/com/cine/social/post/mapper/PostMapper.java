@@ -9,6 +9,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostMapper {
+    @Mapping(target = "resourceType", expression = "java(post.getResourceType().name())")
     PostResponse toResponse(Post post);
     void updatePost(@MappingTarget Post post, PostUpdateRequest request);
 }

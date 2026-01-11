@@ -16,7 +16,8 @@ public class PostResponse {
     private String id;
     private String title;
     private String content;
-    private String imageUrl;
+    private String resourceUrl;
+    private String resourceType;
     private int commentCount;
     private int voteCount;
     private int userVoteValue;
