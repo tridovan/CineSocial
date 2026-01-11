@@ -1,33 +1,36 @@
 server:
-  port: 8082
+  port: 8083
   servlet:
-    context-path: /post/api/v1
+    context-path: /media/api/v1
+
 
 spring:
   application:
-    name: post-service
-  datasource:
-    url: jdbc:mysql://localhost:3306/post_db
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-
+    name: media-service
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   kafka:
     bootstrap-servers: localhost:9094
     consumer:
-      group-id: post-group
+      group-id: media-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
-        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.trusted.packages: "*"
+          spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+          spring.json.trusted.packages: "*"
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+
+minio:
+  url: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: cina-bucket
 
 jwt:
   signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}

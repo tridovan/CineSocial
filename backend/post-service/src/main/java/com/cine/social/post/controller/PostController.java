@@ -75,4 +75,10 @@ public class PostController {
         postService.votePost(postId, value);
         return ApiResponse.success("Vote Post successfully");
     }
+
+    @PostMapping("/{postId}/retry")
+    public ApiResponse<String> retryPost(@PathVariable String postId) {
+        postService.retryPost(postId);
+        return ApiResponse.success("Retry request sent successfully");
+    }
 }

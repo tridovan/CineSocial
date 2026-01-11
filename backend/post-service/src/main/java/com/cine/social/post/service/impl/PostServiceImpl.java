@@ -2,13 +2,15 @@ package com.cine.social.post.service.impl;
 
 import com.cine.social.common.dto.response.PageResponse;
 import com.cine.social.common.exception.AppException;
+import com.cine.social.common.exception.CommonErrorCode;
 import com.cine.social.common.utils.PageHelper;
 import com.cine.social.common.utils.SecurityUtils;
+import com.cine.social.event.MinioFileDeletionEvent;
+import com.cine.social.event.PostCreatedEvent;
 import com.cine.social.post.constant.PostErrorCode;
 import com.cine.social.post.constant.PostStatus;
 import com.cine.social.post.constant.ResourceType;
 import com.cine.social.post.controller.PostController;
-import com.cine.social.post.dto.kafka.PostCreatedEvent;
 import com.cine.social.post.dto.request.PostCreationRequest;
 import com.cine.social.post.dto.request.PostUpdateRequest;
 import com.cine.social.post.dto.response.PostResponse;
@@ -37,8 +39,9 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final PostVoteRepository postVoteRepository;
-    private final KafkaTemplate<String, PostCreatedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final static String POST_TOPIC = "post-created-topic";
+    private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
 
     @Override
     @Transactional
@@ -96,6 +99,7 @@ public class PostServiceImpl implements PostService {
         return buildPostPageResponse(postsPage, page, size, currentUserId);
     }
 
+
     @Override
     @Transactional
     public PostResponse createPost(PostCreationRequest request) {
@@ -120,15 +124,39 @@ public class PostServiceImpl implements PostService {
 
         Post savedPost = postRepository.save(post);
         if (ResourceType.VIDEO.equals(type)) {
-            PostCreatedEvent event = PostCreatedEvent.builder()
-                    .postId(savedPost.getId())
-                    .resourceUrl(savedPost.getResourceUrl())
-                    .build();
-            kafkaTemplate.send(POST_TOPIC, event);
-            log.info("Sending event {} to topic {}", event.getPostId(), POST_TOPIC);
+            createAndSendEvent(savedPost.getId(), savedPost.getResourceUrl());
         }
 
         return postMapper.toResponse(savedPost);
+    }
+
+
+    @Override
+    public void retryPost(String postId) {
+        Post post = findPostByIdOrThrowException(postId);
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        if(!post.getUserId().equals(currentUserId)){
+            throw new AppException(PostErrorCode.UNAUTHORIZED);
+        }
+        if(!post.getResourceType().equals(ResourceType.VIDEO)){
+            throw new AppException(PostErrorCode.INVALID_RESOURCE_DATA);
+        }
+
+        post.setStatus(PostStatus.PENDING_MEDIA);
+        postRepository.save(post);
+
+        createAndSendEvent(post.getId(), post.getResourceUrl());
+    }
+
+
+    private void createAndSendEvent(String postId, String resourceUrl){
+        PostCreatedEvent event = PostCreatedEvent.builder()
+                .postId(postId)
+                .resourceUrl(resourceUrl)
+                .build();
+        kafkaTemplate.send(POST_TOPIC, event);
+        log.info("Sending event {} to topic {}", event.getPostId(), POST_TOPIC);
+
     }
     
 
@@ -142,8 +170,18 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePost(String postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new AppException(PostErrorCode.POST_NOT_FOUND));
+        Post post = findPostByIdOrThrowException(postId);
         postRepository.delete(post);
+        deleteFileIfResourcePresent(post);
+
+    }
+    private void deleteFileIfResourcePresent(Post post){
+        if(Strings.isNotBlank(post.getResourceUrl())) {
+            MinioFileDeletionEvent event = MinioFileDeletionEvent.builder()
+                    .objectName(post.getResourceUrl())
+                    .build();
+            kafkaTemplate.send(FILE_DELETION_TOPIC, event);
+        }
     }
 
     

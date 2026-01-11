@@ -12,6 +12,8 @@
     <modules>
         <module>common-library</module>
         <module>identity-service</module>
+        <module>post-service</module>
+        <module>event-library</module>
     </modules>
 
     <properties>

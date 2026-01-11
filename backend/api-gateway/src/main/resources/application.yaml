@@ -15,6 +15,10 @@ spring:
           predicates:
             - Path=/post/${app.api-version}/**
           uri: http://localhost:8082
+        - id: media-service
+          predicates:
+            - Path=/media/${app.api-version}/**
+          uri: http://localhost:8083
 
 app:
   api-version: api/v1
