@@ -27,19 +27,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = AppException.class)
     ResponseEntity<ApiResponse> handlingAppException(AppException exception) {
         ErrorCode errorCode = exception.getErrorCode();
+        log.error("Exception: ", exception);
         return ResponseEntity.status(errorCode.getStatusCode()).body(ApiResponse.error(errorCode));
     }
 
     @ExceptionHandler(value = AccessDeniedException.class)
     ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {
         CommonErrorCode errorCode = CommonErrorCode.UNAUTHORIZED;
+        log.error("Exception: ", exception);
         return ResponseEntity.status(errorCode.getStatusCode())
                 .body(ApiResponse.error(errorCode));
     }
 
     @ExceptionHandler(value = BadCredentialsException.class)
     ResponseEntity<ApiResponse> handlingBadCredentialsException(BadCredentialsException exception) {
-        CommonErrorCode errorCode = CommonErrorCode.UNAUTHORIZED;
+        CommonErrorCode errorCode = CommonErrorCode.BAD_CREDENTIAL;
+        log.error("Exception: ", exception);
         return ResponseEntity.status(errorCode.getStatusCode())
                 .body(ApiResponse.error(errorCode));
     }

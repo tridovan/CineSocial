@@ -15,12 +15,12 @@ public class CommentResponse {
     private String id;
     private String content;
     private String imgUrl;
-    private String authorId;
     private String parenCommentId;
     private int replyCount;
-    private String replyToUser;
     private int voteCount;
     private int userVoteValue;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private UserResponse authorProfile;
+    private UserResponse replyToUserProfile;
 }

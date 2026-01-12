@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostResponse {
-    private String userId;
     private String id;
     private String title;
     private String content;
@@ -23,4 +22,5 @@ public class PostResponse {
     private int userVoteValue;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private UserResponse userProfile;
 }

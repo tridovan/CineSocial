@@ -12,7 +12,8 @@ public enum CommonErrorCode implements ErrorCode {
     UNAUTHENTICATED(1004, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(1005, "Invalid token", HttpStatus.UNAUTHORIZED),
     ACCESS_TOKEN_EXPIRED(1006, "Access token expired", HttpStatus.UNAUTHORIZED),
-    USER_NOT_FOUND(1007,"User not found", HttpStatus.BAD_REQUEST );
+    USER_NOT_FOUND(1007,"User not found", HttpStatus.BAD_REQUEST ),
+    BAD_CREDENTIAL(1008, "You do not have permission, bad credential", HttpStatus.FORBIDDEN);
 
     CommonErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

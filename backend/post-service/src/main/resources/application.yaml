@@ -36,3 +36,6 @@ app:
   security:
     public-post-endpoints:
       - "/posts/public"
+  services:
+    identity-service:
+      url: http://localhost:8081/identity/api/v1

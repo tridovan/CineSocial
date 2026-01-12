@@ -16,6 +16,7 @@ import com.cine.social.post.repository.CommentRepository;
 import com.cine.social.post.repository.CommentVoteRepository;
 import com.cine.social.post.repository.PostRepository;
 import com.cine.social.post.service.CommentService;
+import com.cine.social.post.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentVoteRepository commentVoteRepository;
     private final PostRepository postRepository;
     private final CommentMapper commentMapper;
+    private final UserProfileService userProfileService;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
@@ -46,6 +48,8 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse createComment(String postId, CommentRequest request) {
         String currentUserId = SecurityUtils.getCurrentUserId();
+
+        userProfileService.ensureUserProfileExists(currentUserId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(PostErrorCode.POST_NOT_FOUND));

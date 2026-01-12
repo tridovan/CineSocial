@@ -1,11 +1,13 @@
 package com.cine.social.identity.mapper;
 
 import com.cine.social.identity.dto.request.UserCreationRequest;
+import com.cine.social.identity.dto.request.UserUpdateRequest;
 import com.cine.social.identity.dto.response.UserResponse;
 import com.cine.social.identity.entity.Role;
 import com.cine.social.identity.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.Objects;
@@ -18,6 +20,8 @@ public interface UserMapper {
     User toUser(UserCreationRequest request);
 
     UserResponse toResponse(User user);
+
+    void updateUser(@MappingTarget User entity, UserUpdateRequest request);
 
 
     default Set<String> map(Set<Role> roles) {
