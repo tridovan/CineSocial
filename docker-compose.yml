@@ -86,7 +86,7 @@ services:
     hostname: debezium
     restart: unless-stopped
     ports:
-      - '8083:8083'
+      - '8089:8083'
     environment:
       - BOOTSTRAP_SERVERS=kafka:9092
       - GROUP_ID=1

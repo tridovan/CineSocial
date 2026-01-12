@@ -20,6 +20,7 @@ import com.cine.social.identity.property.OAuthProperties;
 import com.cine.social.identity.repository.RoleRepository;
 import com.cine.social.identity.repository.UserRepository;
 import com.cine.social.identity.service.AuthService;
+import com.cine.social.identity.service.UserService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -58,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private final OutboundIdentityClient outboundIdentityClient;
     private final OAuthProperties oAuthProperties;
     private final OutboundUserClient outboundUserClient;
+    private final UserService userService;
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
@@ -152,6 +154,7 @@ public class AuthServiceImpl implements AuthService {
 
         if(!StringUtils.hasText(user.getImgUrl())){
             user.setImgUrl(userInfo.getPicture());
+            userService.createUpdatedProfileEventAndSaveOutbox(user);
         }
 
         String token = generateToken(user);
