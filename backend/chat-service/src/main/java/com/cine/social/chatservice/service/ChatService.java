@@ -8,8 +8,8 @@ import com.cine.social.common.dto.response.PageResponse;
 import java.util.List;
 
 public interface ChatService {
-    void saveAndSend(ChatMessageRequest request);
-    List<ChatRoom> getUserRooms();
+    void saveAndSend(ChatMessageRequest request, String senderId);
+    List<ChatRoom> getUserRooms(String userId);
     PageResponse<List<ChatMessageResponse>> getChatHistory(String roomId, int pageNo, int pageSize);
 
 }

@@ -15,7 +15,6 @@ import com.cine.social.chatservice.service.UserProfileService;
 import com.cine.social.common.dto.response.PageResponse;
 import com.cine.social.common.exception.AppException;
 import com.cine.social.common.utils.PageHelper;
-import com.cine.social.common.utils.SecurityUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,8 +44,7 @@ public class ChatServiceImpl implements ChatService {
     private final static String CHAT_MESSAGE_TOPIC = "chat-messages-topic";
 
     @Override
-    public void saveAndSend(ChatMessageRequest request) {
-        String senderId = SecurityUtils.getCurrentUserId();
+    public void saveAndSend(ChatMessageRequest request, String senderId) {
         userProfileService.ensureUserProfileExists(senderId);
         
         try {
@@ -66,8 +64,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<ChatRoom> getUserRooms() {
-        String userId = SecurityUtils.getCurrentUserId();
+    public List<ChatRoom> getUserRooms(String userId) {
         return chatRoomRepository.findByMemberIdsContaining(userId);
     }
 

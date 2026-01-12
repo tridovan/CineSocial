@@ -23,7 +23,9 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public void ensureUserProfileExists(String userId) {
+
         if(userProfileRepository.existsById(userId)){
+            log.info("User {} founded locally.", userId);
             return;
         }
         log.info("User {} not found locally. Fetching from Identity Service...", userId);

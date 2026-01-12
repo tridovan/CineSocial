@@ -65,6 +65,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                             JwtAuthenticationToken authentication = new JwtAuthenticationToken(jwt);
                             accessor.setUser(authentication);
 
+                            // Store the raw JWT token in session attributes for later use
+                            accessor.getSessionAttributes().put("JWT_TOKEN", token);
+
                             log.info("User {} connected via WebSocket", jwt.getSubject());
 
                         } catch (Exception e) {
