@@ -44,8 +44,8 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateProfile(String id, UserUpdateRequest request) {
         User user = findUserByIdlOrThrowException(id);
         userMapper.updateUser(user, request);
-        userRepository.save(user);
-
+        User savedUser = userRepository.save(user);
+        createUpdatedProfileEventAndSaveOutbox(savedUser);
         return userMapper.toResponse(user);
     }
 
@@ -65,7 +65,8 @@ public class UserServiceImpl implements UserService {
                     .type("PROFILE_UPDATED")
                     .payload(objectMapper.writeValueAsString(eventPayload))
                     .build();
-            outboxEventRepository.save(outbox);
+            OutboxEvent saveEvent = outboxEventRepository.save(outbox);
+            log.info("Save outbox event {}", saveEvent.getId());
         } catch (Exception e) {
             log.error("Error serializing outbox payload", e);
         }
