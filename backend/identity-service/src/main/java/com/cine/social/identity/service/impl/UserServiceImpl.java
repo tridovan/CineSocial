@@ -4,6 +4,8 @@ package com.cine.social.identity.service.impl;
 
 import com.cine.social.common.exception.AppException;
 import com.cine.social.common.exception.CommonErrorCode;
+import com.cine.social.common.utils.SecurityUtils;
+import com.cine.social.identity.dto.request.UserUpdateRequest;
 import com.cine.social.identity.dto.response.UserResponse;
 import com.cine.social.identity.entity.User;
 import com.cine.social.identity.mapper.UserMapper;
@@ -25,18 +27,22 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
 
     public UserResponse getMyProfile() {
-        String email = getCurrentEmail();
-        return userMapper.toResponse(findUserByEmailOrThrowException(email));
+        String currentId = SecurityUtils.getCurrentUserId();
+        return userMapper.toResponse(findUserByIdlOrThrowException(currentId));
     }
 
-    private User findUserByEmailOrThrowException(String email){
-        return userRepository.findByEmail(email)
+    @Override
+    public UserResponse updateProfile(String id, UserUpdateRequest request) {
+        User user = findUserByIdlOrThrowException(id);
+        userMapper.updateUser(user, request);
+        userRepository.save(user);
+        return userMapper.toResponse(user);
+    }
+
+    private User findUserByIdlOrThrowException(String id){
+        return userRepository.findById(id)
                 .orElseThrow(() -> new AppException(CommonErrorCode.USER_NOT_FOUND));
     }
-    public String getCurrentEmail(){
-        return SecurityContextHolder.getContext().getAuthentication().getName();
-    }
-
 
 
 

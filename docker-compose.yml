@@ -26,6 +26,8 @@ services:
     image: 'mysql:8.0.36-debian'
     container_name: cina-mysql
     restart: unless-stopped
+    ports:
+      - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=root
     command:
@@ -91,6 +93,7 @@ services:
       - CONFIG_STORAGE_TOPIC=my_connect_configs
       - OFFSET_STORAGE_TOPIC=my_connect_offsets
       - STATUS_STORAGE_TOPIC=my_connect_statuses
+      - KAFKA_HEAP_OPTS=-Xms256m -Xmx512m
     depends_on:
       - kafka
       - mysql
