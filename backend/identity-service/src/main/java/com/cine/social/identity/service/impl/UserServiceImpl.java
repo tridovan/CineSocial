@@ -72,6 +72,11 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public UserResponse getProfile(String userId) {
+        return userMapper.toResponse(findUserByIdlOrThrowException(userId));
+    }
+
     private User findUserByIdlOrThrowException(String id){
         return userRepository.findById(id)
                 .orElseThrow(() -> new AppException(CommonErrorCode.USER_NOT_FOUND));

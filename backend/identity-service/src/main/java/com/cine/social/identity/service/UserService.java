@@ -14,4 +14,6 @@ public interface UserService {
     UserResponse updateProfile(String id, UserUpdateRequest request);
 
     void createUpdatedProfileEventAndSaveOutbox(User user);
+
+    UserResponse getProfile(String userId);
 }

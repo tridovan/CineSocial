@@ -23,6 +23,12 @@ public class UserController {
 
     }
 
+    @GetMapping("/{id}")
+    ApiResponse<UserResponse> getInfo(@PathVariable String id){;
+        return ApiResponse.success(userService.getProfile(id));
+
+    }
+
     @PutMapping("/{id}")
     ApiResponse<UserResponse> updateProfile(@PathVariable String id, @RequestBody UserUpdateRequest request){;
         return ApiResponse.success(userService.updateProfile(id, request));

@@ -20,6 +20,7 @@ import com.cine.social.post.mapper.PostMapper;
 import com.cine.social.post.repository.PostRepository;
 import com.cine.social.post.repository.PostVoteRepository;
 import com.cine.social.post.service.PostService;
+import com.cine.social.post.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -40,6 +41,7 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final PostVoteRepository postVoteRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final UserProfileService userProfileService;
     private final static String POST_TOPIC = "post-created-topic";
     private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
 
@@ -106,6 +108,9 @@ public class PostServiceImpl implements PostService {
         validateResourceIntegrity(request);
 
         String currentUserId = SecurityUtils.getCurrentUserId();
+
+        userProfileService.ensureUserProfileExists(currentUserId);
+
         ResourceType type = ResourceType.valueOf(request.getResourceType());
 
         Post post = Post.builder()

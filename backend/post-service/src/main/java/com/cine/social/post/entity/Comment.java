@@ -53,6 +53,16 @@ public class Comment {
     @Column(name = "reply_to_user_id")
     private String replyToUserId;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private UserProfile authorProfile;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reply_to_user_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private UserProfile replyToUserProfile;
+
+
     @Column(name = "reply_count")
     @Builder.Default
     private int replyCount = 0;
