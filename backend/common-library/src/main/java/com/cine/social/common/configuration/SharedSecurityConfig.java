@@ -38,6 +38,7 @@ public class SharedSecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, publicPost).permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, publicGet).permitAll()
                         .anyRequest().authenticated()
                 )

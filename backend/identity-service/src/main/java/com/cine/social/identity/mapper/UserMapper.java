@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,6 +21,8 @@ public interface UserMapper {
     User toUser(UserCreationRequest request);
 
     UserResponse toResponse(User user);
+
+    List<UserResponse> toListResponses(List<User> users);
 
     void updateUser(@MappingTarget User entity, UserUpdateRequest request);
 
