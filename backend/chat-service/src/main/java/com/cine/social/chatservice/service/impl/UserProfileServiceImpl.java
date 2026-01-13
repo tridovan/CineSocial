@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -27,21 +29,34 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public void ensureUserProfilesExists(List<String> userIds) {
-        List<String> existedIds = userProfileRepository.findAllById(userIds).stream().map(UserProfile::getId).toList();
-        if(!existedIds.isEmpty()) {
-            userIds.removeAll(existedIds);
+        if (Objects.isNull(userIds) || userIds.isEmpty()) {
+            return;
         }
+
+        List<String> toFetch = new ArrayList<>(userIds);
+
+        List<String> existedIds = userProfileRepository.findAllById(toFetch)
+                .stream()
+                .map(UserProfile::getId)
+                .collect(Collectors.toList());
+
+        if (!existedIds.isEmpty()) {
+            toFetch.removeAll(existedIds);
+        }
+
+        if (toFetch.isEmpty()) {
+            return;
+        }
+
         try {
-            var response = identityClient.getBatchUsersInfo(userIds);
-            if (Objects.nonNull(response)  && Objects.nonNull(response.getData()) ) {
+            var response = identityClient.getBatchUsersInfo(toFetch);
+            if (Objects.nonNull(response) && Objects.nonNull(response.getData())) {
                 List<UserResponse> profilesData = response.getData();
-
                 List<UserProfile> usersProfile = userProfileMapper.toListEntities(profilesData);
-
                 userProfileRepository.saveAll(usersProfile);
             }
         } catch (Exception e) {
-            log.error("Failed to fetch user profile for  {}", userIds, e);
+            log.error("Failed to fetch user profile for  {}", toFetch, e);
         }
     }
 }

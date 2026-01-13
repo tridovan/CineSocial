@@ -8,6 +8,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,20 +18,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class WebSocketAuthInterceptor implements ExecutorChannelInterceptor {
+public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
     private final ChatRoomRepository chatRoomRepository;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     
     @Override
-    public Message<?> beforeHandle(Message<?> message, MessageChannel channel, MessageHandler handler) {
+    public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        if (accessor == null || accessor.getCommand() == null) return message;
+        if (Objects.isNull(accessor) || Objects.isNull(accessor.getCommand())) return message;
 
         Authentication user = (Authentication) accessor.getUser();
 
@@ -39,20 +41,11 @@ public class WebSocketAuthInterceptor implements ExecutorChannelInterceptor {
                 throw new AccessDeniedException("User not authenticated");
             }
 
-            SecurityContextHolder.getContext().setAuthentication(user);
-            log.debug("SecurityContext set for thread: {} - User: {}", Thread.currentThread().getName(), user.getName());
-
-            // Validate quyền truy cập Room cho cả SEND và SUBSCRIBE
             validateRoomAccess(user, accessor.getDestination());
         }
-
         return message;
     }
 
-    @Override
-    public void afterMessageHandled(Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-        SecurityContextHolder.clearContext();
-    }
 
     private void validateRoomAccess(Authentication user, String destination) {
         String roomId = extractRoomId(destination);

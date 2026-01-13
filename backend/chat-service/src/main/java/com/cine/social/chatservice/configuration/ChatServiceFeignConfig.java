@@ -20,15 +20,6 @@ public class ChatServiceFeignConfig {
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
             requestTemplate.header("X-Internal-Client", internalApiKey);
-//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//            if (authentication instanceof JwtAuthenticationToken jwtToken) {
-//                String tokenValue = jwtToken.getToken().getTokenValue();
-//                requestTemplate.header("Authorization", "Bearer " + tokenValue);
-//                log.debug("Attached JWT token to Feign request for user: {}", authentication.getName());
-//            } else {
-//                log.warn("No JwtAuthenticationToken found in SecurityContext. Feign call might fail.");
-//            }
         };
     }
 }
