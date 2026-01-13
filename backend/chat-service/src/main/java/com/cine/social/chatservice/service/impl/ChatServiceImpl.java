@@ -1,5 +1,6 @@
 package com.cine.social.chatservice.service.impl;
 
+import com.cine.social.chatservice.constant.RoomType;
 import com.cine.social.chatservice.dto.response.ChatMessageResponse;
 import com.cine.social.chatservice.entity.UserProfile;
 import com.cine.social.chatservice.exception.ChatErrorCode;
@@ -161,7 +162,7 @@ public class ChatServiceImpl implements ChatService {
     private ChatRoom createPrivateRoom(String senderId, String recipientId) {
         ChatRoom newRoom = ChatRoom.builder()
                 .id(UUID.randomUUID().toString())
-                .type(ChatRoom.RoomType.PRIVATE)
+                .type(RoomType.PRIVATE)
                 .memberIds(Arrays.asList(senderId, recipientId))
                 .build();
         return chatRoomRepository.save(newRoom);
