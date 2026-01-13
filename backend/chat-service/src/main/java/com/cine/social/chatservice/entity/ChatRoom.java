@@ -14,12 +14,11 @@ import java.util.List;
 @Builder
 public class ChatRoom {
     @Id
+    @Indexed
     private String id;
     private String chatName;
     private RoomType type;
     private String imgUrl;
-    @Indexed(unique = true)
-    private String membersHash;
     private List<String> memberIds;
 
 }

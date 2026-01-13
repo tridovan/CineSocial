@@ -45,13 +45,15 @@ public class ChatServiceImpl implements ChatService {
     private final static String CHAT_MESSAGE_TOPIC = "chat-messages-topic";
 
     @Override
-    public void saveAndSend(ChatMessageRequest request, String senderId) {
+    public void saveAndSend(String roomId, ChatMessageRequest request, String senderId) {
         userProfileService.ensureUserProfileExists(senderId);
-        
+
         try {
-            ChatRoom chatRoom = resolveChatRoom(request, senderId);
-            ChatMessage savedMsg = saveMessageToDb(request, senderId, chatRoom.getId());
-            
+            ChatRoom chatRoomResponse = chatRoomRepository.findById(roomId)
+                    .orElseThrow(() -> new AppException(ChatErrorCode.INVALID_MESSAGE));
+
+            ChatMessage savedMsg = saveMessageToDb(request, senderId, chatRoomResponse.getId());
+
             UserProfile senderProfile = userProfileRepository.findById(senderId).orElseGet(
                     () -> UserProfile.builder()
                                     .id(senderId)
@@ -60,9 +62,9 @@ public class ChatServiceImpl implements ChatService {
                                     .imageUrl("")
                                     .build()
             );
-            ChatMessageResponse response = buildChatResponse(savedMsg, senderProfile, chatRoom);
-            
-            sendToKafka(chatRoom.getId(), response);
+            ChatMessageResponse response = buildChatResponse(savedMsg, senderProfile, chatRoomResponse);
+
+            sendToKafka(chatRoomResponse.getId(), response);
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
@@ -71,19 +73,16 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    @Override
-    public List<ChatRoom> getUserRooms(String userId) {
-        return chatRoomRepository.findByMemberIdsContaining(userId);
-    }
+
 
     @Override
     public PageResponse<List<ChatMessageResponse>> getChatHistory(String roomId, int pageNo, int pageSize) {
         Pageable pageable = PageHelper.pageEngine(pageNo, pageSize, "timestamp:desc");
         Page<ChatMessage> page = chatMessageRepository.findByRoomId(roomId, pageable);
-        
+
         Map<String, UserProfile> lookupMap = getUserProfileMap(page.getContent());
         List<ChatMessageResponse> items = mapMessagesToResponses(page.getContent(), lookupMap);
-        
+
         return PageResponse.<List<ChatMessageResponse>>builder()
                 .totalPage(page.getTotalPages())
                 .totalElement(page.getTotalElements())
@@ -91,6 +90,18 @@ public class ChatServiceImpl implements ChatService {
                 .pageSize(pageSize)
                 .items(items)
                 .build();
+    }
+
+    @Override
+    public void sendPrivateMessage(String recipientId, ChatMessageRequest request, String senderId) {
+        ChatRoom chatRoom = resolvePrivateChatRoom(recipientId, senderId);
+        saveAndSend(chatRoom.getId(), request, senderId);
+    }
+
+    @Override
+    public void sendGroupMessage(String roomId, ChatMessageRequest request, String senderId) {
+        saveAndSend(roomId, request, senderId);
+
     }
 
 
@@ -102,11 +113,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
 
-    private ChatMessageResponse buildChatResponse(ChatMessage message, UserProfile senderProfile, ChatRoom chatRoom) {
+    private ChatMessageResponse buildChatResponse(ChatMessage message, UserProfile senderProfile, ChatRoom chatRoomResponse) {
         ChatMessageResponse response = chatMessageMapper.toResponse(message);
         enrichResponseWithProfile(response, senderProfile);
-        
-        List<String> recipientIds = chatRoom.getMemberIds().stream()
+
+        List<String> recipientIds = chatRoomResponse.getMemberIds().stream()
                 .filter(id -> !id.equals(message.getSenderId()))
                 .toList();
         response.setRecipientIds(recipientIds);
@@ -134,34 +145,29 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private void enrichResponseWithProfile(ChatMessageResponse response, UserProfile profile) {
-        response.setSendFirstName(profile.getFirstName());
-        response.setSendLastName(profile.getLastName());
-        response.setSenderAvatar(profile.getImageUrl());
+        if(Objects.nonNull(profile)) {
+            response.setSendFirstName(profile.getFirstName());
+            response.setSendLastName(profile.getLastName());
+            response.setSenderAvatar(profile.getImageUrl());
+        }else {
+            response.setSendFirstName("Cine");
+            response.setSendLastName("Social");
+            response.setSenderAvatar("");
+        }
     }
 
-    private ChatRoom resolveChatRoom(ChatMessageRequest request, String senderId) {
-        if (request.getRoomId() != null && !request.getRoomId().isEmpty()) {
-            return chatRoomRepository.findById(request.getRoomId())
-                    .orElseThrow(() -> new AppException(ChatErrorCode.INVALID_MESSAGE));
-        }
+    private ChatRoom resolvePrivateChatRoom(String senderId, String recipientId) {
+        List<String> sortedIds = Arrays.asList(senderId, recipientId);
+        Collections.sort(sortedIds);
+        String uniqueRoomId = String.join("_", sortedIds);
 
-        // Validate: Nếu không có roomId thì BẮT BUỘC phải có recipientId
-        if (request.getRecipientId() == null || request.getRecipientId().isEmpty()) {
-             throw new AppException(ChatErrorCode.INVALID_MESSAGE);
-        }
-
-        // 2. Nếu chưa có roomId, nhưng có recipientId (Chat 1-1 mới)
-        if (request.getRecipientId() != null) {
-            return chatRoomRepository.findExistingPrivateRoom(senderId, request.getRecipientId())
-                    .orElseGet(() -> createPrivateRoom(senderId, request.getRecipientId()));
-        }
-
-        throw new AppException(ChatErrorCode.INVALID_MESSAGE);
+        return chatRoomRepository.findById(uniqueRoomId)
+                .orElseGet(() -> createPrivateRoom(uniqueRoomId, senderId, recipientId));
     }
 
-    private ChatRoom createPrivateRoom(String senderId, String recipientId) {
+    private ChatRoom createPrivateRoom(String id, String senderId, String recipientId) {
         ChatRoom newRoom = ChatRoom.builder()
-                .id(UUID.randomUUID().toString())
+                .id(id)
                 .type(RoomType.PRIVATE)
                 .memberIds(Arrays.asList(senderId, recipientId))
                 .build();

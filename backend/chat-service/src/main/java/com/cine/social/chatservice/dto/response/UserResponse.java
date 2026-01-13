@@ -10,7 +10,6 @@ import lombok.experimental.FieldDefaults;
 @Data
 public class UserResponse {
     String id;
-    String email;
     String firstName;
     String lastName;
     String imgUrl;

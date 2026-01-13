@@ -7,8 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -19,9 +17,13 @@ import java.security.Principal;
 public class MessageController {
     private final ChatService chatService;
 
-    @MessageMapping("/chat/{roomId}")
-    public void processMessage(@DestinationVariable String roomId, @Payload ChatMessageRequest request, Principal principal) {
-        request.setRoomId(roomId);
-        chatService.saveAndSend(request, principal.getName());
+    @MessageMapping("/chat/group/{roomId}")
+    public void processGroupMessage(@DestinationVariable String roomId, @Payload ChatMessageRequest request, Principal principal) {
+        chatService.sendGroupMessage(roomId, request, principal.getName());
+    }
+
+    @MessageMapping("/chat/private/{recipientId}")
+    public void processPrivateMessage(@DestinationVariable String recipientId, @Payload ChatMessageRequest request, Principal principal) {
+        chatService.sendPrivateMessage(recipientId, request, principal.getName());
     }
 }
