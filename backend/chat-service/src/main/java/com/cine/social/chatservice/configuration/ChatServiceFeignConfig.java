@@ -2,6 +2,7 @@ package com.cine.social.chatservice.configuration;
 
 import feign.RequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
@@ -12,18 +13,22 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 @Slf4j
 public class ChatServiceFeignConfig {
 
+    @Value("${app.security.internal-api-key}")
+    private String internalApiKey;
+
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-            if (authentication instanceof JwtAuthenticationToken jwtToken) {
-                String tokenValue = jwtToken.getToken().getTokenValue();
-                requestTemplate.header("Authorization", "Bearer " + tokenValue);
-                log.debug("Attached JWT token to Feign request for user: {}", authentication.getName());
-            } else {
-                log.warn("No JwtAuthenticationToken found in SecurityContext. Feign call might fail.");
-            }
+            requestTemplate.header("X-Internal-Client", internalApiKey);
+//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//            if (authentication instanceof JwtAuthenticationToken jwtToken) {
+//                String tokenValue = jwtToken.getToken().getTokenValue();
+//                requestTemplate.header("Authorization", "Bearer " + tokenValue);
+//                log.debug("Attached JWT token to Feign request for user: {}", authentication.getName());
+//            } else {
+//                log.warn("No JwtAuthenticationToken found in SecurityContext. Feign call might fail.");
+//            }
         };
     }
 }

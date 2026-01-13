@@ -7,6 +7,8 @@ import com.cine.social.identity.entity.OutboxEvent;
 import com.cine.social.identity.entity.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.util.List;
+
 
 public interface UserService {
     UserResponse getMyProfile();
@@ -16,4 +18,6 @@ public interface UserService {
     void createUpdatedProfileEventAndSaveOutbox(User user);
 
     UserResponse getProfile(String userId);
+
+    List<UserResponse> getUsersInfo(List<String> ids);
 }

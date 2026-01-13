@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -76,6 +78,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getProfile(String userId) {
         return userMapper.toResponse(findUserByIdlOrThrowException(userId));
+    }
+
+    @Override
+    public List<UserResponse> getUsersInfo(List<String> ids) {
+        List<User> users = userRepository.findAllById(ids);
+        return userMapper.toListResponses(users);
     }
 
     private User findUserByIdlOrThrowException(String id){

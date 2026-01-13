@@ -1,5 +1,7 @@
 package com.cine.social.chatservice.service;
 
+import java.util.List;
+
 public interface UserProfileService {
-    void ensureUserProfileExists(String userId);
+    void ensureUserProfilesExists(List<String> userIds);
 }

@@ -3,12 +3,14 @@ package com.cine.social.chatservice.service.impl;
 import com.cine.social.chatservice.dto.response.UserResponse;
 import com.cine.social.chatservice.entity.UserProfile;
 import com.cine.social.chatservice.httpclient.IdentityClient;
+import com.cine.social.chatservice.mapper.UserProfileMapper;
 import com.cine.social.chatservice.repository.UserProfileRepository;
 import com.cine.social.chatservice.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 
@@ -19,33 +21,27 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
     private final IdentityClient identityClient;
+    private final UserProfileMapper userProfileMapper;
+
 
 
     @Override
-    public void ensureUserProfileExists(String userId) {
-
-        if(userProfileRepository.existsById(userId)){
-            log.info("User {} founded locally.", userId);
-            return;
+    public void ensureUserProfilesExists(List<String> userIds) {
+        List<String> existedIds = userProfileRepository.findAllById(userIds).stream().map(UserProfile::getId).toList();
+        if(!existedIds.isEmpty()) {
+            userIds.removeAll(existedIds);
         }
-        log.info("User {} not found locally. Fetching from Identity Service...", userId);
-
         try {
-            var response = identityClient.getProfile(userId);
+            var response = identityClient.getBatchUsersInfo(userIds);
             if (Objects.nonNull(response)  && Objects.nonNull(response.getData()) ) {
-                UserResponse profileData = response.getData();
+                List<UserResponse> profilesData = response.getData();
 
-                UserProfile userProfile = UserProfile.builder()
-                        .id(profileData.getId())
-                        .firstName(profileData.getFirstName())
-                        .lastName(profileData.getLastName())
-                        .imageUrl(profileData.getImgUrl())
-                        .build();
+                List<UserProfile> usersProfile = userProfileMapper.toListEntities(profilesData);
 
-                userProfileRepository.save(userProfile);
+                userProfileRepository.saveAll(usersProfile);
             }
         } catch (Exception e) {
-            log.error("Failed to fetch user profile for userId: {}", userId, e);
+            log.error("Failed to fetch user profile for  {}", userIds, e);
         }
     }
 }

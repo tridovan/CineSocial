@@ -46,7 +46,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void saveAndSend(String roomId, ChatMessageRequest request, String senderId) {
-        userProfileService.ensureUserProfileExists(senderId);
+        userProfileService.ensureUserProfilesExists(List.of(senderId));
 
         try {
             ChatRoom chatRoomResponse = chatRoomRepository.findById(roomId)

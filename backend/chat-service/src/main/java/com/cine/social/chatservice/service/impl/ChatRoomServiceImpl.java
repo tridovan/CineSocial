@@ -15,6 +15,7 @@ import com.cine.social.chatservice.mapper.UserProfileMapper;
 import com.cine.social.chatservice.repository.ChatRoomRepository;
 import com.cine.social.chatservice.repository.UserProfileRepository;
 import com.cine.social.chatservice.service.ChatRoomService;
+import com.cine.social.chatservice.service.UserProfileService;
 import com.cine.social.common.exception.AppException;
 import com.cine.social.common.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final UserProfileMapper userProfileMapper;
     private final ChatRoomRepository chatRoomRepository;
     private final UserProfileRepository userProfileRepository;
+    private final UserProfileService userProfileService;
 
 
     @Override
@@ -44,6 +46,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         if (!members.contains(creatorId)) {
             members.add(creatorId);
         }
+
+        userProfileService.ensureUserProfilesExists(request.getMemberIds());
 
         String id = UUID.randomUUID().toString();
         ChatRoom chatRoomResponse = ChatRoom.builder()

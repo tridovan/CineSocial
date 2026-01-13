@@ -10,4 +10,7 @@ import java.util.List;
 public interface UserProfileMapper {
     UserResponse toResponse(UserProfile entity);
     List<UserResponse> toListResponses(List<UserProfile> entities);
+
+    UserProfile toEntity(UserResponse dto);
+    List<UserProfile> toListEntities(List<UserResponse> dtoList);
 }

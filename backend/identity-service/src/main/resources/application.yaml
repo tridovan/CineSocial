@@ -27,6 +27,8 @@ app:
       - "/auth/token"
       - "/auth/register"
       - "/auth/logout"
+      - "/internal/users/fetch"
+    internal-api-key: ${INTERNAL_API_KEY:12345678trideptrai}
 
 outbound:
   oauth2:

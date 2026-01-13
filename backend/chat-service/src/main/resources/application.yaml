@@ -27,3 +27,5 @@ app:
   services:
     identity-service:
       url: http://localhost:8081/identity/api/v1
+  security:
+    internal-api-key: ${INTERNAL_API_KEY:12345678trideptrai}
