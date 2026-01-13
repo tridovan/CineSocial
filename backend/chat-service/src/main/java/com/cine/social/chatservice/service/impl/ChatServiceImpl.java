@@ -51,7 +51,14 @@ public class ChatServiceImpl implements ChatService {
             ChatRoom chatRoom = resolveChatRoom(request, senderId);
             ChatMessage savedMsg = saveMessageToDb(request, senderId, chatRoom.getId());
             
-            UserProfile senderProfile = getUserProfile(senderId);
+            UserProfile senderProfile = userProfileRepository.findById(senderId).orElseGet(
+                    () -> UserProfile.builder()
+                                    .id(senderId)
+                                    .firstName("Social")
+                                    .lastName("Cine")
+                                    .imageUrl("")
+                                    .build()
+            );
             ChatMessageResponse response = buildChatResponse(savedMsg, senderProfile, chatRoom);
             
             sendToKafka(chatRoom.getId(), response);
@@ -93,11 +100,6 @@ public class ChatServiceImpl implements ChatService {
         return chatMessageRepository.save(chatMessage);
     }
 
-    private UserProfile getUserProfile(String userId) {
-        return userProfileRepository.findById(userId).orElseThrow(
-                () -> new AppException(ChatErrorCode.USER_ID_NOT_FOUND)
-        );
-    }
 
     private ChatMessageResponse buildChatResponse(ChatMessage message, UserProfile senderProfile, ChatRoom chatRoom) {
         ChatMessageResponse response = chatMessageMapper.toResponse(message);
@@ -131,15 +133,9 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private void enrichResponseWithProfile(ChatMessageResponse response, UserProfile profile) {
-        if (Objects.nonNull(profile)) {
-            response.setSendFirstName(profile.getFirstName());
-            response.setSendLastName(profile.getLastName());
-            response.setSenderAvatar(profile.getImageUrl());
-        } else {
-            response.setSendFirstName("Cine");
-            response.setSendLastName("Social");
-            response.setSenderAvatar("");
-        }
+        response.setSendFirstName(profile.getFirstName());
+        response.setSendLastName(profile.getLastName());
+        response.setSenderAvatar(profile.getImageUrl());
     }
 
     private ChatRoom resolveChatRoom(ChatMessageRequest request, String senderId) {

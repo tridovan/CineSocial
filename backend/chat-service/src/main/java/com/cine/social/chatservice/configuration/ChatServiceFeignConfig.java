@@ -1,50 +1,29 @@
 package com.cine.social.chatservice.configuration;
 
 import feign.RequestInterceptor;
-import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import java.util.Objects;
-
-/**
- * Feign configuration for chat-service that handles both HTTP and WebSocket contexts
- */
 @Configuration
 @Slf4j
 public class ChatServiceFeignConfig {
 
     @Bean
-    public RequestInterceptor chatServiceRequestInterceptor() {
-        return new RequestInterceptor() {
-            @Override
-            public void apply(RequestTemplate template) {
-                // First, try to get token from WebSocket context (for WebSocket messages)
-                String token = WebSocketAuthContext.getToken();
+    public RequestInterceptor requestInterceptor() {
+        return requestTemplate -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-                if (StringUtils.hasText(token)) {
-                    template.header("Authorization", "Bearer " + token);
-                    log.debug("Using token from WebSocket context");
-                    return;
-                }
-
-                // Fallback: try to get from HTTP request context (for REST API calls)
-                ServletRequestAttributes servletRequestAttributes =
-                        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-
-                if (Objects.nonNull(servletRequestAttributes)) {
-                    var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-                    if (StringUtils.hasText(authHeader)) {
-                        template.header("Authorization", authHeader);
-                        log.debug("Using token from HTTP request context");
-                    }
-                }
+            if (authentication instanceof JwtAuthenticationToken jwtToken) {
+                String tokenValue = jwtToken.getToken().getTokenValue();
+                requestTemplate.header("Authorization", "Bearer " + tokenValue);
+                log.debug("Attached JWT token to Feign request for user: {}", authentication.getName());
+            } else {
+                log.warn("No JwtAuthenticationToken found in SecurityContext. Feign call might fail.");
             }
         };
     }
 }
-
