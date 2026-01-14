@@ -1,0 +1,26 @@
+server:
+  port: 8086
+  servlet:
+    context-path: /search/api/v1
+
+spring:
+  application:
+    name: search-service
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: search-service-group
+      auto-offset-reset: earliest
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    socket-timeout: 3s
+jwt:
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
+
+app:
+  services:
+    identity-service:
+      url: http://localhost:8081/identity/api/v1
+  security:
+    internal-api-key: ${INTERNAL_API_KEY:12345678trideptrai}
