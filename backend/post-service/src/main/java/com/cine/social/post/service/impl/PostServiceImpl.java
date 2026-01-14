@@ -149,12 +149,12 @@ public class PostServiceImpl implements PostService {
             post.setStatus(PostStatus.PUBLISHED);
         }
 
-        Post savedPost = postRepository.save(post);
+        Post savedPost = postRepository.saveAndFlush(post);
         if (ResourceType.VIDEO.equals(type)) {
             createAndSendEvent(savedPost.getId(), savedPost.getResourceUrl());
         }
 
-        createOutBoxEvent(savedPost.getId(), savedPost, currentUserId, "CREATE_POST");
+        createOutBoxEvent(savedPost.getId(), savedPost, currentUserId, "UPSERT_POST");
 
 
         return postMapper.toResponse(savedPost);
@@ -196,7 +196,7 @@ public class PostServiceImpl implements PostService {
         Post post = findPostByIdOrThrowException(id);
         postMapper.updatePost(post, request);
         postRepository.save(post);
-        createOutBoxEvent(id, post, post.getUserId(), "UPDATE_POST");
+        createOutBoxEvent(id, post, post.getUserId(), "UPSERT_POST");
 
     }
 
@@ -210,7 +210,7 @@ public class PostServiceImpl implements PostService {
 
     }
     private void createOutBoxEvent(String postId, Post post, String userId, String eventType){
-        PostOutboxEvent postOutboxEvent = null;
+        PostOutboxEvent postOutboxEvent;
         if(Objects.nonNull(post)) {
             String userFullName = "Cine Social";
             String authorAvatar = null;
@@ -227,11 +227,17 @@ public class PostServiceImpl implements PostService {
                                     .content(post.getContent())
                                     .resourceUrl(post.getResourceUrl())
                                     .resourceType(post.getResourceType().name())
+                                    .authorId(userId)
                                     .authorName(userFullName)
                                     .authorAvatar(authorAvatar)
                                     .commentCount(post.getCommentCount())
                                     .voteCount(post.getVoteCount())
+                                    .createdAt(post.getCreatedAt().toString())
                                     .build();
+        } else {
+            postOutboxEvent = PostOutboxEvent.builder()
+                    .id(postId)
+                    .build();
         }
 
         try {
