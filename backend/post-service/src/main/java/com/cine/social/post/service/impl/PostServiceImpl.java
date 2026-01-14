@@ -8,6 +8,7 @@ import com.cine.social.common.utils.SecurityUtils;
 import com.cine.social.event.MinioFileDeletionEvent;
 import com.cine.social.event.NotificationEvent;
 import com.cine.social.event.PostCreatedEvent;
+import com.cine.social.event.PostOutboxEvent;
 import com.cine.social.post.constant.PostErrorCode;
 import com.cine.social.post.constant.PostStatus;
 import com.cine.social.post.constant.ResourceType;
@@ -15,13 +16,19 @@ import com.cine.social.post.controller.PostController;
 import com.cine.social.post.dto.request.PostCreationRequest;
 import com.cine.social.post.dto.request.PostUpdateRequest;
 import com.cine.social.post.dto.response.PostResponse;
+import com.cine.social.post.entity.OutboxEvent;
 import com.cine.social.post.entity.Post;
 import com.cine.social.post.entity.PostVote;
+import com.cine.social.post.entity.UserProfile;
 import com.cine.social.post.mapper.PostMapper;
+import com.cine.social.post.repository.OutboxEventRepository;
 import com.cine.social.post.repository.PostRepository;
 import com.cine.social.post.repository.PostVoteRepository;
+import com.cine.social.post.repository.UserProfileRepository;
 import com.cine.social.post.service.PostService;
 import com.cine.social.post.service.UserProfileService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -44,11 +51,13 @@ public class PostServiceImpl implements PostService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final UserProfileService userProfileService;
     private final NotificationProducer notificationProducer;
+    private final UserProfileRepository userProfileRepository;
+    private final ObjectMapper objectMapper;
+    private final OutboxEventRepository outboxEventRepository;
     private final static String POST_TOPIC = "post-created-topic";
     private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
 
     @Override
-    @Transactional
     public void votePost(String postId, int value) {
         String currentUserId = SecurityUtils.getCurrentUserId();
         Post post = findPostByIdOrThrowException(postId);
@@ -132,16 +141,21 @@ public class PostServiceImpl implements PostService {
                 .userId(currentUserId)
                 .build();
 
+
+
         if (ResourceType.VIDEO.equals(type)) {
             post.setStatus(PostStatus.PENDING_MEDIA);
         } else {
             post.setStatus(PostStatus.PUBLISHED);
         }
 
-        Post savedPost = postRepository.save(post);
+        Post savedPost = postRepository.saveAndFlush(post);
         if (ResourceType.VIDEO.equals(type)) {
             createAndSendEvent(savedPost.getId(), savedPost.getResourceUrl());
         }
+
+        createOutBoxEvent(savedPost.getId(), savedPost, currentUserId, "UPSERT_POST");
+
 
         return postMapper.toResponse(savedPost);
     }
@@ -177,20 +191,82 @@ public class PostServiceImpl implements PostService {
     
 
     @Override
+    @Transactional
     public void updatePost(String id, PostUpdateRequest request) {
         Post post = findPostByIdOrThrowException(id);
         postMapper.updatePost(post, request);
         postRepository.save(post);
+        createOutBoxEvent(id, post, post.getUserId(), "UPSERT_POST");
 
     }
 
     @Override
+    @Transactional
     public void deletePost(String postId) {
         Post post = findPostByIdOrThrowException(postId);
         postRepository.delete(post);
         deleteFileIfResourcePresent(post);
+        createOutBoxEvent(postId, null, null, "DELETE_POST");
 
     }
+    private void createOutBoxEvent(String postId, Post post, String userId, String eventType){
+        PostOutboxEvent postOutboxEvent;
+        if(Objects.nonNull(post)) {
+            String userFullName = "Cine Social";
+            String authorAvatar = null;
+
+            if (StringUtils.hasText(userId)) {
+                UserProfile userProfile = userProfileRepository.findById(userId).orElseGet(UserProfile::new);
+                userFullName = getUserFullName(userProfile.getFirstName(), userProfile.getLastName());
+                authorAvatar = userProfile.getImgUrl();
+            }
+
+                 postOutboxEvent = PostOutboxEvent.builder()
+                                    .id(post.getId())
+                                    .title(post.getTitle())
+                                    .content(post.getContent())
+                                    .resourceUrl(post.getResourceUrl())
+                                    .resourceType(post.getResourceType().name())
+                                    .authorId(userId)
+                                    .authorName(userFullName)
+                                    .authorAvatar(authorAvatar)
+                                    .commentCount(post.getCommentCount())
+                                    .voteCount(post.getVoteCount())
+                                    .createdAt(post.getCreatedAt().toString())
+                                    .build();
+        } else {
+            postOutboxEvent = PostOutboxEvent.builder()
+                    .id(postId)
+                    .build();
+        }
+
+        try {
+            OutboxEvent event = OutboxEvent.builder()
+                    .aggregateType("POST")
+                    .aggregateId(postId)
+                    .type(eventType)
+                    .payload(objectMapper.writeValueAsString(postOutboxEvent))
+                    .build();
+            OutboxEvent saveEvent = outboxEventRepository.save(event);
+            log.info("Save outbox event {}", saveEvent.getId());
+        } catch (Exception e) {
+            log.error("Error serializing outbox payload", e);
+        }
+
+    }
+
+    private String getUserFullName(String firstName, String lastName){
+        String actorFirstName = Objects.nonNull(firstName) ? firstName : "";
+        String actorLastName = Objects.nonNull(lastName) ? lastName : "";
+        String actorName = "Cine Social";
+
+        if(StringUtils.hasText(actorFirstName) || StringUtils.hasText(actorLastName)){
+            actorName = String.format("%s %s", actorFirstName, actorLastName);
+        }
+
+        return actorName;
+    }
+
     private void deleteFileIfResourcePresent(Post post){
         if(Strings.isNotBlank(post.getResourceUrl())) {
             MinioFileDeletionEvent event = MinioFileDeletionEvent.builder()
