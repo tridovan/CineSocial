@@ -17,7 +17,7 @@ import java.security.Principal;
 public class MessageController {
     private final ChatService chatService;
 
-    @MessageMapping("/chat/group/{roomId}")
+    @MessageMapping("/chat/room/{roomId}")
     public void processGroupMessage(@DestinationVariable String roomId, @Payload ChatMessageRequest request, Principal principal) {
         chatService.sendGroupMessage(roomId, request, principal.getName());
     }

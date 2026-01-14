@@ -39,6 +39,7 @@ public class CommentServiceImpl implements CommentService {
     private final PostRepository postRepository;
     private final CommentMapper commentMapper;
     private final UserProfileService userProfileService;
+    private final NotificationProducer notificationProducer;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
@@ -87,6 +88,15 @@ public class CommentServiceImpl implements CommentService {
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
+
+        if (!savedComment.getAuthorId().equals(post.getUserId())) {
+            notificationProducer.createAndSendingNotificationEvent(
+                    post.getUserId(),
+                    post.getId(),
+                    "COMMENT_POST",
+                    "commented on your post"
+                    );
+        }
 
         return commentMapper.toResponse(savedComment);
     }
@@ -171,6 +181,14 @@ public class CommentServiceImpl implements CommentService {
                         .build();
                 commentVoteRepository.save(newVote);
                 comment.setVoteCount(currentVoteCount + value);
+                if (!comment.getAuthorId().equals(currentUserId)) {
+                    notificationProducer.createAndSendingNotificationEvent(
+                            currentUserId,
+                            comment.getId(),
+                            "VOTE_COMMENT",
+                            "vote your comment"
+                    );
+                }
             }
         }
         commentRepository.save(comment);

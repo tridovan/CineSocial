@@ -37,7 +37,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                         .id(profileData.getId())
                         .firstName(profileData.getFirstName())
                         .lastName(profileData.getLastName())
-                        .imageUrl(profileData.getImgUrl())
+                        .imgUrl(profileData.getImgUrl())
                         .build();
 
                 userProfileRepository.save(userProfile);

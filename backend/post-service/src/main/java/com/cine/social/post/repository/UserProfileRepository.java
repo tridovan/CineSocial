@@ -14,6 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 public interface UserProfileRepository extends JpaRepository<UserProfile, String> {
     @Modifying
     @Transactional
-    @Query("UPDATE UserProfile u SET u.firstName = :#{#e.firstName}, u.lastName = :#{#e.lastName}, u.imageUrl = :#{#e.imageUrl} WHERE u.id = :#{#e.userId}")
+    @Query("UPDATE UserProfile u SET u.firstName = :#{#e.firstName}, u.lastName = :#{#e.lastName}, u.imgUrl = :#{#e.imageUrl} WHERE u.id = :#{#e.userId}")
     int updateProfileIfExists(@Param("e") ProfileUpdatedEvent event);
 }
