@@ -1,6 +1,7 @@
 package com.cine.social.identity.configuration;
 
 import com.cine.social.identity.repository.UserRepository;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -56,6 +57,13 @@ public class SecurityConfig {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(passwordEncoder);
         authenticationProvider.setUserDetailsService(userDetailsService);
         return authenticationProvider;
+    }
+
+    @Bean
+    public FilterRegistrationBean<InternalApiAuthFilter> internalApiAuthFilterRegistrationBean(InternalApiAuthFilter filter) {
+        FilterRegistrationBean<InternalApiAuthFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
 }

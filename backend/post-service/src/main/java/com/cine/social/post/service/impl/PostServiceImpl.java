@@ -6,6 +6,7 @@ import com.cine.social.common.exception.CommonErrorCode;
 import com.cine.social.common.utils.PageHelper;
 import com.cine.social.common.utils.SecurityUtils;
 import com.cine.social.event.MinioFileDeletionEvent;
+import com.cine.social.event.NotificationEvent;
 import com.cine.social.event.PostCreatedEvent;
 import com.cine.social.post.constant.PostErrorCode;
 import com.cine.social.post.constant.PostStatus;
@@ -42,6 +43,7 @@ public class PostServiceImpl implements PostService {
     private final PostVoteRepository postVoteRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final UserProfileService userProfileService;
+    private final NotificationProducer notificationProducer;
     private final static String POST_TOPIC = "post-created-topic";
     private final static String FILE_DELETION_TOPIC = "file-deletion-topic";
 
@@ -79,6 +81,15 @@ public class PostServiceImpl implements PostService {
                         .build();
                 postVoteRepository.save(newVote);
                 post.setVoteCount(currentVoteCount + value);
+
+                if (!post.getUserId().equals(currentUserId)) {
+                    notificationProducer.createAndSendingNotificationEvent(
+                            currentUserId,
+                            post.getId(),
+                            "VOTE_POST",
+                            "vote your post"
+                    );
+                }
             }
         }
 
