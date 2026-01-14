@@ -36,7 +36,7 @@ public class PostDocument {
     @Field(type = FieldType.Keyword)
     private String authorId;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Text, analyzer = "keyword")
     private String authorName;
 
     @Field(type = FieldType.Integer)
