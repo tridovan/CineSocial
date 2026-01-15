@@ -1,3 +1,7 @@
+// Polyfill for sockjs-client
+// @ts-ignore
+window.global = window;
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
