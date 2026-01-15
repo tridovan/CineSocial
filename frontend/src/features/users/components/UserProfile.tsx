@@ -3,14 +3,16 @@ import { useParams } from 'react-router-dom';
 import { userService } from '../services/userService';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import type { UserWallProfileResponse } from '../types';
-import { Loader2, User as UserIcon, Check } from 'lucide-react';
+import { Loader2, User as UserIcon, Check, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { EditProfileModal } from './EditProfileModal';
 
 export const UserProfile = () => {
     const { id } = useParams();
     const [profile, setProfile] = useState<UserWallProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [following, setFollowing] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const { user, isAuthenticated } = useAuthStore();
     const isOwnProfile = user?.id === id;
@@ -79,14 +81,22 @@ export const UserProfile = () => {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="relative mb-8">
-                <div className="h-48 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-md" /> {/* Cover Image with Social Gradient */}
+                {/* Premium Cinema Background */}
+                <div className="h-48 relative overflow-hidden rounded-xl bg-bg-card border-b-4 border-brand-red shadow-lg group">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-800 via-zinc-950 to-black"></div>
+                    {/* Gold Dust Texture */}
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#D4AF37 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+                    {/* Spotlight effect */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                </div>
+
                 <div className="absolute -bottom-16 left-8 flex items-end gap-6">
-                    <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden flex items-center justify-center shadow-lg">
-                        {profile.imgUrl ? (
-                            <img src={profile.imgUrl} alt={profile.firstName} className="w-full h-full object-cover" />
-                        ) : (
-                            <UserIcon size={48} className="text-gray-400" />
-                        )}
+                    <div className="w-32 h-32 rounded-full border-4 border-brand-red bg-zinc-900 overflow-hidden flex items-center justify-center shadow-2xl relative z-10">
+                        <img
+                            src={profile.imgUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.firstName + ' ' + profile.lastName)}&background=D4AF37&color=fff`}
+                            alt={profile.firstName}
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                     <div className="mb-4">
                         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2 drop-shadow-sm md:drop-shadow-none md:text-gray-900 text-white md:mix-blend-normal mix-blend-difference">
@@ -96,7 +106,14 @@ export const UserProfile = () => {
                     </div>
                 </div>
                 <div className="absolute bottom-4 right-8">
-                    {!isOwnProfile && (
+                    {isOwnProfile ? (
+                        <button
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="px-6 py-2 bg-white text-gray-800 border-2 border-gray-200 hover:bg-gray-50 rounded-full font-bold transition-all flex items-center gap-2 shadow-sm"
+                        >
+                            <Edit2 size={18} /> Edit Profile
+                        </button>
+                    ) : (
                         <button
                             onClick={handleFollowToggle}
                             className={`px-6 py-2 rounded-full font-bold transition-all flex items-center gap-2 shadow-sm ${following
@@ -131,6 +148,15 @@ export const UserProfile = () => {
                     </div>
                 </div>
             </div>
+
+            {isOwnProfile && profile && (
+                <EditProfileModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    currentProfile={profile}
+                    onUpdateSuccess={() => loadProfile(profile.id as string)}
+                />
+            )}
         </div>
     );
 };

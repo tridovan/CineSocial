@@ -13,10 +13,6 @@ export const userService = {
         const response = await api.get<ApiResponseUserResponse>('/identity/api/v1/users/me');
         return response.data;
     },
-    getUserProfile: async (id: string) => {
-        const response = await api.get<ApiResponseUserResponse>(`/identity/api/v1/users/${id}`);
-        return response.data;
-    },
     updateProfile: async (id: string, data: UserUpdateRequest) => {
         const response = await api.put<ApiResponseUserResponse>(`/identity/api/v1/users/${id}`, data);
         return response.data;
