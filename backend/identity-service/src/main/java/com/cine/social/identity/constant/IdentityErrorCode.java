@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatusCode;
 public enum IdentityErrorCode implements ErrorCode {
     CAN_NOT_CREATE_JWT_TOKEN(8100,"There are troubles in server that prevent the JWT token from being generate" , HttpStatus.INTERNAL_SERVER_ERROR),
     EXISTED_EMAIL(8101,"Email is existed" , HttpStatus.BAD_REQUEST),
-    EMAIL_NOT_EXISTED(8102, "Email is not existed", HttpStatus.BAD_REQUEST);
+    EMAIL_NOT_EXISTED(8102, "Email is not existed", HttpStatus.BAD_REQUEST),
+    CANNOT_FOLLOW_SELF(8103,"You can not follow yourself", HttpStatus.BAD_REQUEST );
 
     IdentityErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
