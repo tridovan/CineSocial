@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CreatePost } from '../components/CreatePost';
 import { PostList } from '../components/PostList';
+import { ReelFeed } from '../components/ReelFeed';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Film, Users, Globe } from 'lucide-react';
 
@@ -44,10 +45,14 @@ export const HomePage = () => {
                 ))}
             </div>
 
-            <PostList
-                key={`${activeFeed}-${refreshKey}`}
-                feedType={activeFeed}
-            />
+            {activeFeed === 'REELS' ? (
+                <ReelFeed key={refreshKey} />
+            ) : (
+                <PostList
+                    key={`${activeFeed}-${refreshKey}`}
+                    feedType={activeFeed}
+                />
+            )}
         </div>
     );
 };

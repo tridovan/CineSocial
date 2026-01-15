@@ -7,6 +7,7 @@ import { AuthenticatePage } from '@/features/auth/pages/AuthenticatePage';
 import { UserProfile } from '@/features/users/components/UserProfile';
 import { FollowingPage } from '@/features/users/pages/FollowingPage';
 import { HomePage } from '@/features/posts/pages/HomePage';
+import { PostDetailsPage } from '@/features/posts/pages/PostDetailsPage';
 
 const MyProfileRedirect = () => {
     const { user } = useAuthStore();

@@ -27,14 +27,7 @@ export const postService = {
     },
 
     getPostById: async (postId: string) => {
-        // Note: The User Swagger didn't explicitly list GET /posts/{postId} in the snippet, 
-        // but it's standard. If missing, we rely on feed. 
-        // But usually you need to fetch a single post for notifications etc.
-        // Assuming it exists or we use the feed list logic.
-        // Wait, the Swagger had /posts/{postId} PUT/DELETE, but not GET?
-        // Ah, typically there is one. I'll omit if not strictly requested, 
-        // but usually 'getPosts' is the main one.
-        // Let's stick to the feed APIs provided.
+        // API endpoint GET /posts/{postId} does not exist.
         return null;
     },
 

@@ -204,6 +204,12 @@ public class PostServiceImpl implements PostService {
         return buildPostPageResponse(postsPage, page, size, currentUserId);
     }
 
+    @Override
+    public PostResponse getPost(String postId) {
+        Post post = findPostByIdOrThrowException(postId);
+        return postMapper.toResponse(post);
+    }
+
 
     private void createAndSendEvent(String postId, String resourceUrl){
         PostCreatedEvent event = PostCreatedEvent.builder()

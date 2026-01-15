@@ -2,22 +2,22 @@ import type { UserResponse } from '../../users/types';
 
 export interface CommentRequest {
     content: string;
-    imgUrl?: string;
-    parenCommentId?: string | null; // ID of parent comment if this is a reply
+    imgUrl?: string; // Optional image
+    parenCommentId?: string; // If replying to a comment
 }
 
 export interface CommentResponse {
     id: string;
     content: string;
-    imgUrl?: string;
+    imgUrl?: string; // Optional image
     parenCommentId?: string;
     replyCount: number;
     voteCount: number;
-    userVoteValue: number;
+    userVoteValue: number; // 1, 0, -1
     createdAt: string;
     updatedAt: string;
     authorProfile: UserResponse;
-    replyToUserProfile?: UserResponse;
+    replyToUserProfile?: UserResponse; // User being replied to
 }
 
 export interface PageResponse<T> {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, MoreHorizontal, RefreshCw, ThumbsDown, ThumbsUp, Trash2, Edit } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, RefreshCw, ThumbsDown, ThumbsUp, Trash2, Edit, Share2 } from 'lucide-react';
 import type { PostResponse } from '../types';
 import { getFullMediaUrl } from '@/config/media';
 import { RelativeTime } from '@/components/ui/RelativeTime';
@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { EditPostModal } from './EditPostModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { CommentList } from '@/features/comments/components/CommentList';
 
 interface PostItemProps {
     post: PostResponse;
@@ -24,6 +25,7 @@ export const PostItem = ({ post, onUpdate, onDelete }: PostItemProps) => {
     const [showMenu, setShowMenu] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showComments, setShowComments] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const isOwner = user?.id === post.userProfile?.id;
@@ -196,33 +198,41 @@ export const PostItem = ({ post, onUpdate, onDelete }: PostItemProps) => {
                 </div>
             )}
 
-            <div className="flex items-center gap-6 text-gray-500 border-t border-gray-100 pt-4">
-                <div className="flex gap-1">
+            <div className="flex items-center justify-between text-gray-500 border-t border-gray-100 pt-4">
+                <div className="flex items-center bg-gray-50 rounded-full">
                     <button
                         onClick={() => handleVote(1)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${currentVoteValue === 1 ? 'text-brand-red bg-red-50' : 'hover:bg-gray-50 hover:text-gray-900'
-                            }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-l-full transition-colors ${currentVoteValue === 1 ? 'text-brand-red bg-red-50 font-medium' : 'hover:bg-gray-100'}`}
                         disabled={voteLoading}
                     >
-                        <ThumbsUp size={20} className={currentVoteValue === 1 ? 'fill-current' : ''} />
+                        <ThumbsUp size={18} className={currentVoteValue === 1 ? 'fill-current' : ''} />
                         <span>{currentVoteCount}</span>
                     </button>
-
+                    <div className="w-[1px] h-4 bg-gray-200"></div>
                     <button
                         onClick={() => handleVote(-1)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${currentVoteValue === -1 ? 'text-brand-red bg-red-50' : 'hover:bg-gray-50 hover:text-gray-900'
-                            }`}
+                        className={`flex items-center px-3 py-1.5 rounded-r-full transition-colors ${currentVoteValue === -1 ? 'text-brand-red bg-red-50' : 'hover:bg-gray-100'}`}
                         disabled={voteLoading}
                     >
-                        <ThumbsDown size={20} className={currentVoteValue === -1 ? 'fill-current' : ''} />
+                        <ThumbsDown size={18} className={currentVoteValue === -1 ? 'fill-current' : ''} />
                     </button>
                 </div>
 
-                <Link to={`/posts/${post.id}`} className="flex items-center gap-2 hover:text-brand-gold transition-colors px-3 py-1.5 rounded-full hover:bg-gray-50">
+                <button
+                    onClick={() => setShowComments(!showComments)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${showComments ? 'text-gray-900 bg-gray-100' : 'hover:bg-gray-50'}`}
+                >
                     <MessageCircle size={20} />
                     <span>{post.commentCount} Comments</span>
-                </Link>
+                </button>
             </div>
+
+            {/* Inline Comments Section */}
+            {showComments && (
+                <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <CommentList postId={post.id} />
+                </div>
+            )}
 
             {isEditing && (
                 <EditPostModal

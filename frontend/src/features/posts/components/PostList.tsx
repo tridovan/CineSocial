@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { PostItem } from './PostItem';
 import { postService } from '../services/postService';
-import type { PostResponse } from '../types';
 import { Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useAuthStore } from '@/features/auth/stores/authStore';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 interface PostListProps {
     userId?: string; // If provided, fetch posts for this user
@@ -12,64 +10,40 @@ interface PostListProps {
 }
 
 export const PostList = ({ userId, feedType = 'HOME' }: PostListProps) => {
-    const { user } = useAuthStore();
-    const [posts, setPosts] = useState<PostResponse[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
 
-    const loadPosts = async (reset = false) => {
-        try {
-            setLoading(true);
-            const currentPage = reset ? 1 : page;
-            let response;
-
-            switch (feedType) {
-                case 'PROFILE':
-                    if (userId) {
-                        response = await postService.getPostsByUserId(userId, currentPage);
-                    } else {
-                        // Fallback for my profile if no ID passed but type is PROFILE (shouldn't happen often)
-                        response = await postService.getMyPosts(currentPage);
-                    }
-                    break;
-                case 'MY_FEED':
-                    response = await postService.getMyFeed(currentPage);
-                    break;
-                case 'REELS':
-                    response = await postService.getReels(currentPage);
-                    break;
-                case 'HOME':
-                default:
-                    response = await postService.getPosts(currentPage);
-                    break;
-            }
-
-            if (response?.data) {
-                const newPosts = response.data.items;
-                if (reset) {
-                    setPosts(newPosts);
+    // Memoize the fetch function to be stable
+    const fetchPosts = useCallback(async (page: number, size: number) => {
+        let response;
+        switch (feedType) {
+            case 'PROFILE':
+                if (userId) {
+                    response = await postService.getPostsByUserId(userId, page, size);
                 } else {
-                    setPosts(prev => [...prev, ...newPosts]);
+                    response = await postService.getMyPosts(page, size);
                 }
-
-                setHasMore(currentPage < response.data.totalPage);
-                setPage(currentPage + 1);
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to load posts');
-        } finally {
-            setLoading(false);
+                break;
+            case 'MY_FEED':
+                response = await postService.getMyFeed(page, size);
+                break;
+            case 'REELS':
+                response = await postService.getReels(page, size);
+                break;
+            case 'HOME':
+            default:
+                response = await postService.getPosts(page, size);
+                break;
         }
-    };
-
-    useEffect(() => {
-        loadPosts(true);
+        // Hook expects PageResponse<T>, so we return response.data
+        return response.data;
     }, [feedType, userId]);
 
-    // Expose a refresh method if needed for parent components
-    // For now, we listen to prop changes.
+    const {
+        data: posts,
+        loading,
+        hasMore,
+        lastElementRef,
+        error
+    } = useInfiniteScroll(fetchPosts, 1, 10, [feedType, userId]);
 
     if (loading && posts.length === 0) {
         return <div className="flex justify-center py-10"><Loader2 className="animate-spin text-brand-red" size={40} /></div>;
@@ -83,24 +57,31 @@ export const PostList = ({ userId, feedType = 'HOME' }: PostListProps) => {
         );
     }
 
+    if (error) {
+        return <div className="text-center py-10 text-red-500">Failed to load posts. Please try again.</div>;
+    }
+
     return (
         <div className="space-y-6">
-            {posts.map((post) => (
-                <PostItem key={post.id} post={post} />
-            ))}
+            {posts.map((post, index) => {
+                if (posts.length === index + 1) {
+                    return (
+                        <div ref={lastElementRef} key={post.id}>
+                            <PostItem post={post} />
+                        </div>
+                    );
+                } else {
+                    return <PostItem key={post.id} post={post} />;
+                }
+            })}
 
-            {hasMore ? (
-                <div className="text-center pt-4">
-                    <button
-                        onClick={() => loadPosts(false)}
-                        disabled={loading}
-                        className="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
-                    >
-                        {loading ? <Loader2 className="animate-spin inline mr-2" size={16} /> : null}
-                        Load More
-                    </button>
+            {loading && posts.length > 0 && (
+                <div className="flex justify-center py-4">
+                    <Loader2 className="animate-spin text-gray-400" size={24} />
                 </div>
-            ) : (
+            )}
+
+            {!hasMore && posts.length > 0 && (
                 <div className="text-center py-6 text-gray-400 text-sm">
                     You've reached the end of the list.
                 </div>
