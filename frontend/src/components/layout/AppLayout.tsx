@@ -63,6 +63,7 @@ const AppLayout = () => {
 
     return (
         <div className="min-h-screen bg-bg-dark text-gray-900 font-sans">
+            <NotificationListener />
             <Sidebar />
             <main className="md:ml-64 min-h-screen">
                 <div className="max-w-4xl mx-auto p-4 md:p-8">

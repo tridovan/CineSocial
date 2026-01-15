@@ -11,8 +11,10 @@ export const NotificationListener = () => {
     const eventSourceRef = useRef<EventSource | null>(null);
 
     useEffect(() => {
+        console.log("NotificationListener: Effect running. Token:", token ? "Present" : "Missing");
         if (!token) return;
 
+        console.log("NotificationListener: Subscribing to SSE...");
         const eventSource = notificationService.subscribe(token);
         eventSourceRef.current = eventSource;
 
