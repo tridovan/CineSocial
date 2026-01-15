@@ -73,6 +73,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         List<UserProfile> userProfiles = userProfileRepository.findAllById(chatRoom.getMemberIds());
         return ChatRoomResponseDetail.builder()
                     .id(chatRoom.getId())
+                    .type(chatRoom.getType().name())
                     .chatName(chatRoom.getChatName())
                     .imgUrl(chatRoom.getImgUrl())
                     .memberIds(chatRoom.getMemberIds())

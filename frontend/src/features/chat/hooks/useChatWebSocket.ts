@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { Client, type IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import type { ChatMessageResponse } from '../types';
@@ -16,6 +16,7 @@ interface UseChatWebSocketProps {
 export const useChatWebSocket = ({ token, onMessageReceived }: UseChatWebSocketProps) => {
     const clientRef = useRef<Client | null>(null);
     const subscriptionsRef = useRef<Map<string, any>>(new Map());
+    const [connected, setConnected] = useState(false);
 
     useEffect(() => {
         if (!token) return;
@@ -29,10 +30,10 @@ export const useChatWebSocket = ({ token, onMessageReceived }: UseChatWebSocketP
             // Use SockJS factory
             webSocketFactory: () => new SockJS(socketUrl),
 
-            // Debugging
-            debug: (str) => {
-                console.log('STOMP: ' + str);
-            },
+            // Debugging (Silent for production/clean usage)
+            // debug: (str) => {
+            //     console.log('STOMP: ' + str);
+            // },
 
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -40,11 +41,16 @@ export const useChatWebSocket = ({ token, onMessageReceived }: UseChatWebSocketP
 
             onConnect: () => {
                 console.log('✅ STOMP Connected via SockJS');
+                setConnected(true);
             },
             onStompError: (frame) => {
                 console.error('❌ Broker reported error: ' + frame.headers['message']);
                 console.error('Additional details: ' + frame.body);
             },
+            onWebSocketClose: () => {
+                console.log('STOMP: Connection closed');
+                setConnected(false);
+            }
         });
 
         client.activate();
@@ -52,6 +58,7 @@ export const useChatWebSocket = ({ token, onMessageReceived }: UseChatWebSocketP
 
         return () => {
             console.log('Deactivating STOMP client...');
+            setConnected(false);
             client.deactivate();
             subscriptionsRef.current.clear();
         };
@@ -73,11 +80,10 @@ export const useChatWebSocket = ({ token, onMessageReceived }: UseChatWebSocketP
             return; // Already subscribed
         }
 
-        // Logic: Subscribe to user-specific queue for this room
-        // Backend config enables /user broker. 
-        // Destination: /user/queue/room/{roomId}
-        console.log(`Subscribing to /user/queue/room/${roomId}`);
-        const sub = clientRef.current.subscribe(`/user/queue/room/${roomId}`, (message: IMessage) => {
+        // Logic: Subscribe to Topic for this room (Backend Pub/Sub)
+        // Destination: /topic/room/{roomId}
+        console.log(`Subscribing to /topic/room/${roomId}`);
+        const sub = clientRef.current.subscribe(`/topic/room/${roomId}`, (message: IMessage) => {
             try {
                 const body = JSON.parse(message.body) as ChatMessageResponse;
                 onMessageReceivedRef.current(body);
@@ -132,6 +138,6 @@ export const useChatWebSocket = ({ token, onMessageReceived }: UseChatWebSocketP
         unsubscribeFromRoom,
         sendGroupMessage,
         sendPrivateMessage,
-        isConnected: clientRef.current?.connected ?? false
+        isConnected: connected
     };
 };

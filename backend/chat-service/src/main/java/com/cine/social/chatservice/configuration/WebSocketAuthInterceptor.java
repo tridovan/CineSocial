@@ -1,6 +1,7 @@
 package com.cine.social.chatservice.configuration;
 
 import com.cine.social.chatservice.repository.ChatRoomRepository;
+import com.cine.social.chatservice.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -26,6 +27,7 @@ import java.util.Objects;
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final UserProfileRepository userProfileRepository;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     
     @Override
@@ -34,6 +36,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
         if (Objects.isNull(accessor) || Objects.isNull(accessor.getCommand())) return message;
 
+        log.info("Command {} for user {}", accessor.getCommand(), accessor.getUser().getName());
         Authentication user = (Authentication) accessor.getUser();
 
         if (StompCommand.SEND.equals(accessor.getCommand()) || StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
@@ -41,7 +44,16 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 throw new AccessDeniedException("User not authenticated");
             }
 
-            validateRoomAccess(user, accessor.getDestination());
+            String destination = accessor.getDestination();
+
+            String recipientId = extractRecipientId(destination);
+            String roomId = extractRoomId(destination);
+
+            if (recipientId != null) {
+                validatePrivateAccess(user, destination);
+            } else if (roomId != null) {
+                validateRoomAccess(user, destination);
+            }
         }
         return message;
     }
@@ -60,23 +72,59 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 throw new AccessDeniedException("You are not a member of this chat room");
             }
         }
+
     }
 
     private String extractRoomId(String destination) {
         if (destination == null) return null;
         
-        // Pattern cho Subscribe: /topic/room/{id} hoặc /user/queue/room/{id}
-        String roomPattern = "**/room/{roomId}";
-        if (pathMatcher.match(roomPattern, destination)) {
-            return pathMatcher.extractUriTemplateVariables(roomPattern, destination).get("roomId");
+        // Pattern cho Subscribe: /topic/room/{id}
+        String subscribePattern = "**/topic/room/{roomId}";
+        if (pathMatcher.match(subscribePattern, destination)) {
+            return pathMatcher.extractUriTemplateVariables(subscribePattern, destination).get("roomId");
         }
 
-        // Pattern cho Send: /app/chat/{id}
-        String chatPattern = "**/chat/{roomId}";
-        if (pathMatcher.match(chatPattern, destination)) {
-            return pathMatcher.extractUriTemplateVariables(chatPattern, destination).get("roomId");
+        // Pattern cho Send Group Message: /app/chat/room/{id}
+        String groupChatPattern = "**/chat/room/{roomId}";
+        if (pathMatcher.match(groupChatPattern, destination)) {
+            return pathMatcher.extractUriTemplateVariables(groupChatPattern, destination).get("roomId");
         }
         
         return null;
     }
+
+
+    private void validatePrivateAccess(Authentication user, String destination) {
+        String recipientId = extractRecipientId(destination);
+
+        if (recipientId == null) return;
+
+        if (recipientId.trim().isEmpty()) {
+            throw new AccessDeniedException("Recipient ID cannot be empty");
+        }
+
+        boolean recipientExists = userProfileRepository.existsById(recipientId);
+
+        if (!recipientExists) {
+            log.warn("User {} tried to send message to non-existent user {}", user.getName(), recipientId);
+            throw new AccessDeniedException("Recipient user does not exist");
+        }
+
+        if (user.getName().equals(recipientId)) {
+            throw new AccessDeniedException("Cannot send private message to yourself");
+        }
+    }
+
+    private String extractRecipientId(String destination) {
+        if (destination == null) return null;
+
+        // Client gửi lên: /app/chat/private/user123
+        String privatePattern = "**/chat/private/{recipientId}";
+
+        if (pathMatcher.match(privatePattern, destination)) {
+            return pathMatcher.extractUriTemplateVariables(privatePattern, destination).get("recipientId");
+        }
+        return null;
+    }
+
 }
