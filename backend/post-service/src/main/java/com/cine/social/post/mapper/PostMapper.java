@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
         uses = {UserProfileMapper.class})
 public interface PostMapper {
     @Mapping(target = "resourceType", expression = "java(post.getResourceType().name())")
+    @Mapping(target = "status", expression = "java(post.getStatus().name())")
     PostResponse toResponse(Post post);
     void updatePost(@MappingTarget Post post, PostUpdateRequest request);
 

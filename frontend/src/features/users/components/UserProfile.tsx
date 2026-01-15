@@ -6,6 +6,7 @@ import type { UserWallProfileResponse } from '../types';
 import { Loader2, User as UserIcon, Check, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EditProfileModal } from './EditProfileModal';
+import { PostList } from '@/features/posts/components/PostList';
 
 export const UserProfile = () => {
     const { id } = useParams();
@@ -142,10 +143,13 @@ export const UserProfile = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                    {/* PostList will be here */}
-                    <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center text-gray-500">
-                        {isOwnProfile ? "My Posts (Coming Soon)" : "User's posts will appear here."}
-                    </div>
+                    <h3 className="font-bold mb-4 text-gray-900 text-lg">Posts</h3>
+                    {profile.id && (
+                        <PostList
+                            userId={profile.id}
+                            feedType={isOwnProfile ? 'PROFILE' : 'PROFILE'}
+                        />
+                    )}
                 </div>
             </div>
 

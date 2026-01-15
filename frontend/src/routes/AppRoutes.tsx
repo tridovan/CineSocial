@@ -6,6 +6,7 @@ import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { AuthenticatePage } from '@/features/auth/pages/AuthenticatePage';
 import { UserProfile } from '@/features/users/components/UserProfile';
 import { FollowingPage } from '@/features/users/pages/FollowingPage';
+import { HomePage } from '@/features/posts/pages/HomePage';
 
 const MyProfileRedirect = () => {
     const { user } = useAuthStore();
@@ -21,7 +22,7 @@ const AppRoutes = () => {
     return (
         <Routes>
             <Route element={<AppLayout />}>
-                <Route path="/" element={<div className="text-center p-10">Home Feed (Coming Soon)</div>} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<div className="flex justify-center pt-10"><LoginForm /></div>} />
                 <Route path="/register" element={<div className="flex justify-center pt-10"><RegisterForm /></div>} />
                 <Route path="/authenticate" element={<AuthenticatePage />} />

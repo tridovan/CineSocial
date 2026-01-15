@@ -1,5 +1,6 @@
 package com.cine.social.post.dto.response;
 
+import com.cine.social.post.constant.PostStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class PostResponse {
     private String resourceUrl;
     private String resourceType;
     private int commentCount;
+    private String status;
     private int voteCount;
     private int userVoteValue;
     private LocalDateTime createdAt;
