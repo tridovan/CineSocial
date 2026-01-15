@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, User, MessageCircle, Heart, Search, Bell, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { NotificationListener } from '@/features/notifications/components/NotificationListener';
 
 const Sidebar = () => {
     const logout = useAuthStore((state) => state.logout);
@@ -18,7 +19,7 @@ const Sidebar = () => {
                 CINESOCIAL
             </div>
             <nav className="flex flex-col gap-2 flex-1">
-                <NavLink to="/" icon={<Home size={24} />} label="Feed" />
+                <NavLink to="/" icon={<Home size={24} />} label="Home" />
                 <NavLink to="/search" icon={<Search size={24} />} label="Search" />
                 <NavLink to="/notifications" icon={<Bell size={24} />} label="Notifications" />
                 <NavLink to="/messages" icon={<MessageCircle size={24} />} label="Messages" />
@@ -62,6 +63,7 @@ const AppLayout = () => {
 
     return (
         <div className="min-h-screen bg-bg-dark text-gray-900 font-sans">
+            <NotificationListener />
             <Sidebar />
             <main className="md:ml-64 min-h-screen">
                 <div className="max-w-4xl mx-auto p-4 md:p-8">

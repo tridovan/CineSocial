@@ -29,4 +29,6 @@ public interface PostService {
     PageResponse<List<PostResponse>> getReels(int page, int size);
 
     PageResponse<List<PostResponse>> getPostsByUserId(String userId, int page, int size);
+
+    PostResponse getPost(String postId);
 }

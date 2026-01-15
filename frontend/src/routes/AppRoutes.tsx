@@ -8,6 +8,8 @@ import { UserProfile } from '@/features/users/components/UserProfile';
 import { FollowingPage } from '@/features/users/pages/FollowingPage';
 import { HomePage } from '@/features/posts/pages/HomePage';
 
+import { NotificationPage } from '@/features/notifications/pages/NotificationPage';
+
 const MyProfileRedirect = () => {
     const { user } = useAuthStore();
 
@@ -30,7 +32,7 @@ const AppRoutes = () => {
                 <Route path="/me/following" element={<FollowingPage />} />
                 <Route path="/users/:id" element={<UserProfile />} />
                 <Route path="/search" element={<div>Search Page</div>} />
-                <Route path="/notifications" element={<div>Notifications</div>} />
+                <Route path="/notifications" element={<NotificationPage />} />
                 <Route path="/messages" element={<div>Messages</div>} />
             </Route>
         </Routes>

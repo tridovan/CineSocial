@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Image, Video, X, Loader2 } from 'lucide-react';
 import { postService } from '../services/postService';
 import { mediaService } from '@/features/media/services/mediaService';
+import { getFullMediaUrl } from '@/config/media';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import type { ResourceType } from '../types';
@@ -13,6 +14,7 @@ interface CreatePostProps {
 
 interface CreatePostForm {
     content: string;
+    title: string;
 }
 
 export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
@@ -24,7 +26,15 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
     const [resourceType, setResourceType] = useState<ResourceType>('NONE');
 
     const contentValue = watch('content');
-    const isPostable = contentValue?.trim().length > 0 || selectedFile !== null;
+    const titleValue = watch('title');
+
+    // Both TITLE and CONTENT are required as per user feedback (@NotBlank)
+    // We also treat selectedFile as a valid substitute for content logic-wise in many apps,
+    // but if backend enforces @NotBlank content, we must have text.
+    // Let's assume content is strictly required.    
+    const isPostable =
+        (titleValue?.trim().length > 0) &&
+        (contentValue?.trim().length > 0);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: ResourceType) => {
         const file = e.target.files?.[0];
@@ -62,7 +72,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                 content: data.content,
                 resourceUrl: resourceUrl || undefined,
                 resourceType: resourceType,
-                title: undefined // Title is optional, simplifying for now
+                title: data.title
             });
 
             toast.success('Post created successfully!');
@@ -81,18 +91,23 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
     return (
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-            <div className="flex gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+            <div className="flex gap-4 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-200 shrink-0">
                     <img
-                        src={user.imgUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=D4AF37&color=fff`}
-                        alt={user.firstName}
+                        src={getFullMediaUrl(user?.imgUrl) || `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.firstName || 'U') + ' ' + (user?.lastName || 'N'))}&background=D4AF37&color=fff`}
+                        alt={user?.firstName}
                         className="w-full h-full object-cover"
                     />
                 </div>
                 <div className="flex-1">
                     <form onSubmit={handleSubmit(onSubmit)}>
+                        <input
+                            {...register('title', { required: true })}
+                            placeholder="Title (Required)"
+                            className="w-full bg-transparent text-gray-900 border-none focus:ring-0 font-bold text-xl placeholder-gray-400 p-0 mb-2"
+                        />
                         <textarea
-                            {...register('content')}
+                            {...register('content', { required: true })}
                             placeholder={`What's on your mind, ${user.firstName}?`}
                             className="w-full bg-transparent text-gray-900 resize-none border-none focus:ring-0 text-lg placeholder-gray-400 p-0"
                             rows={2}
@@ -141,4 +156,3 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         </div>
     );
 };
-

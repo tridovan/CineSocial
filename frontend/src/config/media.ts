@@ -3,6 +3,8 @@ export const MEDIA_CONFIG = {
     BUCKET_URL: import.meta.env.VITE_MEDIA_BUCKET_URL || 'http://localhost:9000/cina-bucket/',
 };
 
+export const FILE_URL_PREFIX = MEDIA_CONFIG.BUCKET_URL;
+
 /**
  * appends the bucket url to the relative path if needed
  */

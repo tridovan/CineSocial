@@ -29,6 +29,11 @@ public class PostController {
         return ApiResponse.success(postService.createPost(request));
     }
 
+    @GetMapping("/{postId}")
+    public ApiResponse<PostResponse> getPost(@PathVariable String postId) {
+        return ApiResponse.success(postService.getPost(postId));
+    }
+
     @GetMapping
     public ApiResponse<PageResponse<List<PostResponse>>>getPosts(
             @RequestParam(defaultValue = "1") int page,

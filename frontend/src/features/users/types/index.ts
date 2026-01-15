@@ -4,6 +4,8 @@ export interface UserResponse {
     firstName?: string;
     lastName?: string;
     imgUrl?: string;
+    bio?: string;
+    backgroundImgUrl?: string;
     roles?: string[];
     createAt?: string;
     updateAt?: string;
@@ -13,6 +15,8 @@ export interface UserUpdateRequest {
     firstName?: string;
     lastName?: string;
     imgUrl?: string;
+    bio?: string;
+    backgroundImgUrl?: string;
 }
 
 export interface UserWallProfileResponse {
@@ -21,6 +25,8 @@ export interface UserWallProfileResponse {
     firstName?: string;
     lastName?: string;
     imgUrl?: string;
+    bio?: string;
+    backgroundImgUrl?: string;
     followed?: boolean;
 }
 
