@@ -11,9 +11,14 @@
 
     <modules>
         <module>common-library</module>
+        <module>event-library</module>
+        <module>api-gateway</module>
         <module>identity-service</module>
         <module>post-service</module>
-        <module>event-library</module>
+        <module>media-service</module>
+        <module>notification-service</module>
+        <module>search-service</module>
+        <module>chat-service</module>
     </modules>
 
     <properties>

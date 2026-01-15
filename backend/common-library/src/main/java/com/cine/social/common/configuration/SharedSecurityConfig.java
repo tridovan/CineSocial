@@ -21,6 +21,13 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SharedSecurityConfig {
 
+    private static final String[] SWAGGER_UI_PATHS = {
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/*/api/v1/v3/api-docs"
+    };
+
 
     @Bean
     public SecurityFilterChain filterChain(
@@ -37,6 +44,7 @@ public class SharedSecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SWAGGER_UI_PATHS).permitAll()
                         .requestMatchers(HttpMethod.POST, publicPost).permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, publicGet).permitAll()

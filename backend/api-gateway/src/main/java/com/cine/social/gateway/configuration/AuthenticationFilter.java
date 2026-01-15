@@ -18,6 +18,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -29,6 +30,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     private final PublicEndpointProperties publicEndpointProperties;
     private final ObjectMapper objectMapper;
     private final ReactiveJwtDecoder jwtDecoder;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -54,10 +56,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         HttpMethod method = request.getMethod();
 
         if (method.matches("POST")) {
-            return publicEndpointProperties.getPublicPostEndpoints().stream().anyMatch(path::matches);
+            return publicEndpointProperties.getPublicPostEndpoints().stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
         }
         if (method.matches("GET")) {
-            return publicEndpointProperties.getPublicGetEndpoints().stream().anyMatch(path::matches);
+            return publicEndpointProperties.getPublicGetEndpoints().stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
         }
         return false;
     }

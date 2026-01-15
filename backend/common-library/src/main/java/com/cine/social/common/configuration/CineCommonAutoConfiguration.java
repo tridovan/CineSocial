@@ -13,7 +13,8 @@ import com.cine.social.common.security.JwtAuthenticationEntryPoint;
     SharedSecurityConfig.class,
     CustomJwtDecoder.class,
     JwtAuthenticationEntryPoint.class,
-    GlobalExceptionHandler.class
+    GlobalExceptionHandler.class,
+    OpenApiConfig.class
 })
 public class CineCommonAutoConfiguration {
 }
