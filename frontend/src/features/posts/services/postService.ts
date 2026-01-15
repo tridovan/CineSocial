@@ -27,8 +27,8 @@ export const postService = {
     },
 
     getPostById: async (postId: string) => {
-        // API endpoint GET /posts/{postId} does not exist.
-        return null;
+        const response = await api.get<ApiResponsePostResponse>(`${BASE_URL}/posts/${postId}`);
+        return response.data;
     },
 
     // === Feeds ===

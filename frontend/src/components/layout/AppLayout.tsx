@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, User, MessageCircle, Heart, Search, Bell, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { NotificationListener } from '@/features/notifications/components/NotificationListener';
 
 const Sidebar = () => {
     const logout = useAuthStore((state) => state.logout);

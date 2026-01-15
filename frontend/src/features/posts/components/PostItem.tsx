@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, MoreHorizontal, RefreshCw, ThumbsDown, ThumbsUp, Trash2, Edit, Share2 } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, RefreshCw, ThumbsDown, ThumbsUp, Trash2, Edit } from 'lucide-react';
 import type { PostResponse } from '../types';
 import { getFullMediaUrl } from '@/config/media';
 import { RelativeTime } from '@/components/ui/RelativeTime';

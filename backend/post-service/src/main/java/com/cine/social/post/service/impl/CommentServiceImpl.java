@@ -184,7 +184,7 @@ public class CommentServiceImpl implements CommentService {
                 if (!comment.getAuthorId().equals(currentUserId)) {
                     notificationProducer.createAndSendingNotificationEvent(
                             currentUserId,
-                            comment.getId(),
+                            comment.getPost().getId(),
                             "VOTE_COMMENT",
                             "vote your comment"
                     );
