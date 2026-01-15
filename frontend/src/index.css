@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --color-brand-red: #E50914;
+  /* Cinema Red */
+  --color-brand-gold: #FFD700;
+  --color-bg-dark: #0f0f0f;
+  --color-bg-card: #1a1a1a;
+}
+
+@theme {
+  --color-brand-red: var(--color-brand-red);
+  --color-brand-gold: var(--color-brand-gold);
+  --color-bg-dark: var(--color-bg-dark);
+  --color-bg-card: var(--color-bg-card);
+}
+
+@layer base {
+  body {
+    @apply bg-bg-dark text-white font-sans antialiased;
+  }
+}
