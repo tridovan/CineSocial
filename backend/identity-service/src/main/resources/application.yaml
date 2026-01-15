@@ -28,6 +28,8 @@ app:
       - "/auth/register"
       - "/auth/logout"
       - "/internal/users/fetch"
+    public-get-endpoints:
+      - "/users/*/wall"
     internal-api-key: ${INTERNAL_API_KEY:12345678trideptrai}
 
 outbound:

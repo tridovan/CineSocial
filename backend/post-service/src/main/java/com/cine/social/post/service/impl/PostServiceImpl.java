@@ -35,6 +35,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -115,7 +117,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResponse<List<PostResponse>> getPosts(int page, int size) {
-        String currentUserId = SecurityUtils.getCurrentUserId();
+        String currentUserId = getCurrentUserIdOrNull();
         Pageable pageable = PageHelper.pageEngine(page, size, "createdAt:desc");
         Page<Post> postsPage = postRepository.findAllByStatus(PostStatus.PUBLISHED, pageable);
         return buildPostPageResponse(postsPage, page, size, currentUserId);
@@ -188,9 +190,17 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResponse<List<PostResponse>> getReels(int page, int size) {
-        String currentUserId = SecurityUtils.getCurrentUserId();
+        String currentUserId = getCurrentUserIdOrNull();
         Pageable pageable = PageHelper.pageEngine(page, size, "createdAt:desc");
         Page<Post> postsPage = postRepository.findAllByStatusAndResourceType(PostStatus.PUBLISHED, ResourceType.VIDEO, pageable);
+        return buildPostPageResponse(postsPage, page, size, currentUserId);
+    }
+
+    @Override
+    public PageResponse<List<PostResponse>> getPostsByUserId(String userId, int page, int size) {
+        String currentUserId = getCurrentUserIdOrNull();
+        Pageable pageable = PageHelper.pageEngine(page, size, "createdAt:desc");
+        Page<Post> postsPage = postRepository.findAllByUserIdAndStatus(userId, PostStatus.PUBLISHED, pageable);
         return buildPostPageResponse(postsPage, page, size, currentUserId);
     }
 
@@ -348,6 +358,14 @@ public class PostServiceImpl implements PostService {
         if (ResourceType.NONE.equals(type) && hasUrl) {
             throw new AppException(PostErrorCode.INVALID_RESOURCE_DATA);
         }
+    }
+
+    private String getCurrentUserIdOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        return authentication.getName();
     }
 
 }

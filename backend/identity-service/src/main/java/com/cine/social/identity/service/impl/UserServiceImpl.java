@@ -24,6 +24,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -147,9 +149,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserWallProfileResponse getUserWallProfile(String id) {
-        String currentUserId = SecurityUtils.getCurrentUserId();
+        String currentUserId = getCurrentUserIdOrNull();
         User user = findUserByIdlOrThrowException(id);
-        boolean isFollowed = userFollowRepository.existsByFollowerIdAndFollowedId(currentUserId, user.getId());
+        boolean isFollowed = false;
+        if(Objects.nonNull(currentUserId)){
+            isFollowed = userFollowRepository.existsByFollowerIdAndFollowedId(currentUserId, user.getId());
+        }
         return UserWallProfileResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -211,6 +216,14 @@ public class UserServiceImpl implements UserService {
     private User findUserByIdlOrThrowException(String id){
         return userRepository.findById(id)
                 .orElseThrow(() -> new AppException(CommonErrorCode.USER_NOT_FOUND));
+    }
+
+    private String getCurrentUserIdOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        return authentication.getName();
     }
 
 

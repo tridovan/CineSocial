@@ -36,6 +36,7 @@ app:
   security:
     public-get-endpoints:
       - "/posts"
+      - "/posts/reels"
   services:
     identity-service:
       url: http://localhost:8081/identity/api/v1

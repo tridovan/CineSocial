@@ -57,6 +57,14 @@ public class PostController {
         return ApiResponse.success(postService.getReels(page, size));
     }
 
+    @GetMapping("/user/{userId}")
+    public ApiResponse<PageResponse<List<PostResponse>>>getPostsByUserId(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(postService.getPostsByUserId(userId, page, size));
+    }
+
 
     @PutMapping("/{postId}")
     public ApiResponse<String> updatePost(@PathVariable String postId, @RequestBody PostUpdateRequest request) {

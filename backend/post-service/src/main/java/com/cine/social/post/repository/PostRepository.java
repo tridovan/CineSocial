@@ -29,4 +29,7 @@ public interface PostRepository extends JpaRepository<Post, String> {
 
     @EntityGraph(attributePaths = {"userProfile"})
     Page<Post> findAllByStatusAndResourceType(PostStatus status, ResourceType resourceType, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"userProfile"})
+    Page<Post> findAllByUserIdAndStatus(String userId, PostStatus status, Pageable pageable);
 }
