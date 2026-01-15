@@ -23,4 +23,8 @@ public interface PostService {
     PageResponse<List<PostResponse>> getPosts(int page, int size);
 
     void retryPost(String postId);
+
+    PageResponse<List<PostResponse>> getMyFeed(int page, int size);
+
+    PageResponse<List<PostResponse>> getReels(int page, int size);
 }

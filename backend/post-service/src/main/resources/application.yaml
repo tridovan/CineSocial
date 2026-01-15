@@ -34,8 +34,8 @@ jwt:
 
 app:
   security:
-    public-post-endpoints:
-      - "/posts/public"
+    public-get-endpoints:
+      - "/posts"
   services:
     identity-service:
       url: http://localhost:8081/identity/api/v1

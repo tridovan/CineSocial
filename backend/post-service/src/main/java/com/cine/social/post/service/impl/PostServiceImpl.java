@@ -178,6 +178,22 @@ public class PostServiceImpl implements PostService {
         createAndSendEvent(post.getId(), post.getResourceUrl());
     }
 
+    @Override
+    public PageResponse<List<PostResponse>> getMyFeed(int page, int size) {
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        Pageable pageable = PageHelper.pageEngine(page, size, "createdAt:desc");
+        Page<Post> postsPage = postRepository.findFeedByUserId(currentUserId, pageable);
+        return buildPostPageResponse(postsPage, page, size, currentUserId);
+    }
+
+    @Override
+    public PageResponse<List<PostResponse>> getReels(int page, int size) {
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        Pageable pageable = PageHelper.pageEngine(page, size, "createdAt:desc");
+        Page<Post> postsPage = postRepository.findAllByStatusAndResourceType(PostStatus.PUBLISHED, ResourceType.VIDEO, pageable);
+        return buildPostPageResponse(postsPage, page, size, currentUserId);
+    }
+
 
     private void createAndSendEvent(String postId, String resourceUrl){
         PostCreatedEvent event = PostCreatedEvent.builder()

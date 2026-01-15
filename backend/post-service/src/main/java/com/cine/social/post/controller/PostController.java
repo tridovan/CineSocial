@@ -43,6 +43,20 @@ public class PostController {
         return ApiResponse.success(postService.getMyPosts(page, size));
     }
 
+    @GetMapping("/my-feed")
+    public ApiResponse<PageResponse<List<PostResponse>>>getMyFeed(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(postService.getMyFeed(page, size));
+    }
+
+    @GetMapping("/reels")
+    public ApiResponse<PageResponse<List<PostResponse>>>getReels(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(postService.getReels(page, size));
+    }
+
 
     @PutMapping("/{postId}")
     public ApiResponse<String> updatePost(@PathVariable String postId, @RequestBody PostUpdateRequest request) {
