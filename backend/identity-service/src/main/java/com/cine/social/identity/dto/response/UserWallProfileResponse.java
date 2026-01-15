@@ -16,6 +16,8 @@ public class UserWallProfileResponse {
     String email;
     String firstName;
     String lastName;
+    String bio;
+    String backgroundImgUrl;
     String imgUrl;
     boolean isFollowed;
 }

@@ -18,7 +18,7 @@ const Sidebar = () => {
                 CINESOCIAL
             </div>
             <nav className="flex flex-col gap-2 flex-1">
-                <NavLink to="/" icon={<Home size={24} />} label="Feed" />
+                <NavLink to="/" icon={<Home size={24} />} label="Home" />
                 <NavLink to="/search" icon={<Search size={24} />} label="Search" />
                 <NavLink to="/notifications" icon={<Bell size={24} />} label="Notifications" />
                 <NavLink to="/messages" icon={<MessageCircle size={24} />} label="Messages" />

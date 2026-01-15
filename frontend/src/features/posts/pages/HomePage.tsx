@@ -1,41 +1,53 @@
+import { useState } from 'react';
 import { CreatePost } from '../components/CreatePost';
 import { PostList } from '../components/PostList';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { Film, Users, Globe } from 'lucide-react';
+
+type FeedType = 'HOME' | 'MY_FEED' | 'REELS';
 
 export const HomePage = () => {
     const { isAuthenticated } = useAuthStore();
-    // We can define a callback to refresh the list, but for now PostList listens to prop changes.
-    // To trigger a refresh on new post, we can use a key or a state.
-    // Let's rely on PostList's internal logic or force re-mount via key?
-    // Better: Pass a "refreshTrigger" prop to PostList, or rely on simple state toggle.
+    const [activeFeed, setActiveFeed] = useState<FeedType>('HOME');
+    const [refreshKey, setRefreshKey] = useState(0);
 
-    // Actually, CreatePost just calls onPostCreated. 
-    // Let's modify PostList to accept a "refreshKey" or similar.
-    // Or simpler: Just render them. The user will see their post at the top? 
-    // Wait, the API returns the list. If we don't refresh the list, the new post won't appear.
-
-    // Let's implement a simple refresh trigger.
-
-    const reloadFeed = () => {
-        // This is a bit hacky without a proper query client (like React Query), 
-        // but we can just reload the page or use a key to force re-render of PostList.
-        // Using window.location.reload() is too harsh.
-        // Using a key on PostList is effective for resetting it.
-        window.location.reload();
+    const handlePostCreated = () => {
+        setRefreshKey(prev => prev + 1);
     };
+
+    const tabs = [
+        { id: 'HOME' as FeedType, label: 'Home', icon: Globe },
+        { id: 'MY_FEED' as FeedType, label: 'Following', icon: Users },
+        { id: 'REELS' as FeedType, label: 'Reels', icon: Film },
+    ];
 
     return (
         <div className="max-w-2xl mx-auto py-8">
-            {isAuthenticated && (
-                <CreatePost onPostCreated={reloadFeed} />
+            {/* Only show CreatePost if not in Reels mode? Or always? Usually always for Home/Following */}
+            {isAuthenticated && activeFeed !== 'REELS' && (
+                <CreatePost onPostCreated={handlePostCreated} />
             )}
 
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-xl font-bold text-gray-900">News Feed</h1>
-                {/* Future: tabs for 'For You' vs 'Following' */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 mb-6 flex items-center justify-between">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveFeed(tab.id)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all ${activeFeed === tab.id
+                            ? 'bg-brand-gold/10 text-brand-gold'
+                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                            }`}
+                    >
+                        <tab.icon size={18} />
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
-            <PostList feedType="HOME" />
+            <PostList
+                key={`${activeFeed}-${refreshKey}`}
+                feedType={activeFeed}
+            />
         </div>
     );
 };

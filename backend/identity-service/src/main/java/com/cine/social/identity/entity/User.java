@@ -42,7 +42,12 @@ public class User implements UserDetails {
     @Nationalized
     String lastName;
 
+    @Nationalized
+    String bio;
+
     String imgUrl;
+
+    String backgroundImgUrl;
 
     @ManyToMany(fetch = FetchType.EAGER)
     Set<Role> roles;
