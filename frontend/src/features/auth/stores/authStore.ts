@@ -1,18 +1,14 @@
 import { create } from 'zustand';
-
-interface User {
-    id: string;
-    username: string;
-    email: string;
-    avatarUrl?: string;
-}
+import type { UserResponse } from '../../users/types';
+import { userService } from '../../users/services/userService';
 
 interface AuthState {
-    user: User | null;
+    user: UserResponse | null;
     token: string | null;
     isAuthenticated: boolean;
-    login: (user: User, token: string) => void;
+    login: (user: UserResponse | null, token: string) => void;
     logout: () => void;
+    fetchProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -27,4 +23,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         localStorage.removeItem('token');
         set({ user: null, token: null, isAuthenticated: false });
     },
+    fetchProfile: async () => {
+        try {
+            const response = await userService.getMyInfo();
+            if (response && response.data) {
+                set({ user: response.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch profile', error);
+        }
+    }
 }));

@@ -25,7 +25,8 @@ public class SharedSecurityConfig {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/webjars/**",
-            "/*/api/v1/v3/api-docs"
+            "/v3/api-docs/**",
+            "/swagger-resources/**"
     };
 
 
