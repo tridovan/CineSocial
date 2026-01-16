@@ -37,6 +37,7 @@ app:
   security:
     public-post-endpoints:
       - "/identity/api/v1/auth/token"
+      - "/identity/api/v1/auth/outbound/authentication"
       - "/identity/api/v1/auth/register"
       - "/identity/api/v1/auth/logout"
       - "/identity/api/v1/users/*/wall"
@@ -55,7 +56,7 @@ app:
 
 
 jwt:
-  signerKey: ${JWT_SIGNER_KEY}
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
 
 
 springdoc:

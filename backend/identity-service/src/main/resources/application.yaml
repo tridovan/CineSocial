@@ -16,7 +16,7 @@ spring:
       ddl-auto: update
 
 jwt:
-  signerKey: ${JWT_SIGNER_KEY}
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
   valid-duration-in-second: 36000
   refreshable-duration-in-second: 36000
   issuer: "Tri dep trai"
@@ -28,6 +28,7 @@ app:
       - "/auth/register"
       - "/auth/logout"
       - "/internal/users/fetch"
+      - "/auth/outbound/authentication"
     public-get-endpoints:
       - "/users/*/wall"
     internal-api-key: ${INTERNAL_API_KEY:12345678trideptrai}
