@@ -27,6 +27,10 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public PageResponse<List<PostDocument>> searchPosts(String keyword, String resourceType, Pageable pageable) {
+        if (StringUtils.hasText(keyword)) {
+            pageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        }
+
         var queryBuilder = NativeQuery.builder()
                 .withPageable(pageable);
 
@@ -38,6 +42,7 @@ public class SearchServiceImpl implements SearchService {
                                             .fields("title^3", "content", "authorName^2")
                                             .query(keyword)
                                             .fuzziness("AUTO")
+                                            .minimumShouldMatch("70%")
                                     )
                             )
                             .functions(f -> f
@@ -58,7 +63,7 @@ public class SearchServiceImpl implements SearchService {
                                             .missing(0.0)
                                     )
                             )
-                            .boostMode(FunctionBoostMode.Multiply)
+                            .boostMode(FunctionBoostMode.Sum)
                             .scoreMode(FunctionScoreMode.Sum)
                     )
             );

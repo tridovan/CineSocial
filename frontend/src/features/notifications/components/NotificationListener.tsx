@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 export const NotificationListener = () => {
     const { token } = useAuthStore();
-    const { addNotification } = useNotificationStore();
+    const addNotification = useNotificationStore(state => state.addNotification);
     const eventSourceRef = useRef<EventSource | null>(null);
 
     useEffect(() => {

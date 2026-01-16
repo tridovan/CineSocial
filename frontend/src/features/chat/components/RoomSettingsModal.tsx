@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { X, Users, Trash2, Plus, LogOut } from 'lucide-react';
+import { X, Users, Trash2, Plus, LogOut, Camera, Loader2 } from 'lucide-react';
 import { UserSearchList } from './UserSearchList';
 import { chatService } from '../services/chatService';
+import { mediaService } from '@/features/media/services/mediaService';
 import type { ChatRoomResponseDetail } from '../types';
 import { getFullMediaUrl } from '@/config/media';
 import toast from 'react-hot-toast';
@@ -24,8 +25,12 @@ interface RoomForm {
 export const RoomSettingsModal = ({ isOpen, onClose, room, onUpdate }: RoomSettingsModalProps) => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isAddingUser, setIsAddingUser] = useState(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+    // Create a ref for the file input
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Only allow editing name for Groups?
     // User response schema implies standard ChatRoomRequest for update.
@@ -56,6 +61,36 @@ export const RoomSettingsModal = ({ isOpen, onClose, room, onUpdate }: RoomSetti
             toast.error('Failed to update room');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setIsUploadingImage(true);
+            const uploadedMedia = await mediaService.uploadImage(file);
+
+            if (uploadedMedia && uploadedMedia.url) {
+                // Immediately update the room with new image
+                const res = await chatService.updateChatRoom(room.id, {
+                    chatName: room.chatName,
+                    memberIds: room.memberIds,
+                    imgUrl: uploadedMedia.url
+                });
+
+                if (res.code === 1000) {
+                    toast.success('Group icon updated');
+                    onUpdate();
+                }
+            }
+        } catch (error) {
+            console.error("Failed to upload group icon:", error);
+            toast.error("Failed to upload group icon");
+        } finally {
+            setIsUploadingImage(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -134,12 +169,37 @@ export const RoomSettingsModal = ({ isOpen, onClose, room, onUpdate }: RoomSetti
                 </div>
 
                 <div className="p-6 flex flex-col items-center overflow-y-auto">
-                    <div className="w-20 h-20 rounded-full bg-gray-100 mb-4 overflow-hidden border border-gray-200 flex-shrink-0">
-                        <img
-                            src={getFullMediaUrl(room.imgUrl)}
-                            alt={room.chatName}
-                            className="w-full h-full object-cover"
-                        />
+                    <div className="relative group/avatar">
+                        <div className="w-20 h-20 rounded-full bg-gray-100 mb-4 overflow-hidden border border-gray-200 flex-shrink-0">
+                            <img
+                                src={getFullMediaUrl(room.imgUrl)}
+                                alt={room.chatName}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+
+                        {isGroup && (
+                            <>
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity mb-4"
+                                    disabled={isUploadingImage}
+                                >
+                                    {isUploadingImage ? (
+                                        <Loader2 className="animate-spin text-white" />
+                                    ) : (
+                                        <Camera className="text-white" />
+                                    )}
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                />
+                            </>
+                        )}
                     </div>
 
                     {isGroup ? (
