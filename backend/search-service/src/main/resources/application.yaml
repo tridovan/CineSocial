@@ -23,6 +23,7 @@ app:
     identity-service:
       url: http://localhost:8081/identity/api/v1
   security:
-    public-post-endpoints:
+    public-get-endpoints:
       - "/search/post"
+      - "/search/autocomplete"
     internal-api-key: ${INTERNAL_API_KEY:12345678trideptrai}

@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface SearchService {
     PageResponse<List<PostDocument>> searchPosts(String keyword, String resourceType, Pageable pageable);
+
+    List<String> autocompletePosts(String keyword);
 }

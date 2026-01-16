@@ -41,6 +41,7 @@ app:
       - "/identity/api/v1/auth/logout"
       - "/identity/api/v1/users/*/wall"
       - "/search/api/v1/search/post"
+      - "/search/api/v1/search/autocomplete"
 
     public-get-endpoints:
       - "/post/api/v1/posts"

@@ -31,4 +31,9 @@ public class SearchController {
 
         return ApiResponse.success(searchService.searchPosts(keyword, resourceType, pageable));
     }
+
+    @GetMapping("/autocomplete")
+    public ApiResponse<List<String>> autocomplete(@RequestParam String keyword) {
+        return ApiResponse.success(searchService.autocompletePosts(keyword));
+    }
 }

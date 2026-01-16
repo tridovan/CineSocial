@@ -1,7 +1,9 @@
 package com.cine.social.searchservice.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -12,6 +14,8 @@ import java.util.Date;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(indexName = "posts")
 public class PostDocument {
 
@@ -40,10 +44,10 @@ public class PostDocument {
     private String authorName;
 
     @Field(type = FieldType.Integer)
-    private int voteCount;
+    private Integer voteCount;
 
     @Field(type = FieldType.Integer)
-    private int commentCount;
+    private Integer commentCount;
 
     @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     private Date createdAt;

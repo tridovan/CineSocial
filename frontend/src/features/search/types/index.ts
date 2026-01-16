@@ -19,3 +19,8 @@ export interface ApiResponsePageResponseListPostDocument {
     message: string;
     data: PageResponse<PostDocument>;
 }
+export interface ApiResponseListString {
+    code: number;
+    message: string;
+    data: string[];
+}

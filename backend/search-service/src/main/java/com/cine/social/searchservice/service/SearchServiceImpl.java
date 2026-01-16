@@ -12,6 +12,7 @@ import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -84,5 +85,31 @@ public class SearchServiceImpl implements SearchService {
                 .totalElement(searchHits.getTotalHits())
                 .items(posts)
                 .build();
+    }
+
+    @Override
+    public List<String> autocompletePosts(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return List.of();
+        }
+
+        var query = NativeQuery.builder()
+                .withQuery(q -> q
+                        .matchPhrasePrefix(mpp -> mpp
+                                .field("title")
+                                .query(keyword)
+                        )
+                )
+                .withPageable(Pageable.ofSize(10))
+                .withSourceFilter(new FetchSourceFilter(new String[]{"title"}, null))
+                .build();
+
+        SearchHits<PostDocument> searchHits = elasticsearchOperations.search(query, PostDocument.class);
+
+        return searchHits.stream()
+                .map(hit -> hit.getContent().getTitle())
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
     }
 }
