@@ -12,6 +12,7 @@ import com.cine.social.chatservice.entity.UserProfile;
 import com.cine.social.chatservice.exception.ChatErrorCode;
 import com.cine.social.chatservice.mapper.ChatRoomMapper;
 import com.cine.social.chatservice.mapper.UserProfileMapper;
+import com.cine.social.chatservice.repository.ChatMessageRepository;
 import com.cine.social.chatservice.repository.ChatRoomRepository;
 import com.cine.social.chatservice.repository.UserProfileRepository;
 import com.cine.social.chatservice.service.ChatRoomService;
@@ -21,11 +22,11 @@ import com.cine.social.common.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,6 +38,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileService userProfileService;
+    private final ChatMessageRepository chatMessageRepository;
 
 
     @Override
@@ -62,23 +64,75 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     public List<ChatRoomResponse> getUserRooms() {
-        String userId = SecurityUtils.getCurrentUserId();
-        var rooms = chatRoomRepository.findByMemberIdsContaining(userId);
-        return chatRoomMapper.toListResponses(rooms);
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        List<ChatRoom> rooms = chatRoomRepository.findByMemberIdsContaining(currentUserId);
+        Set<String> profileIds = rooms.stream()
+                .flatMap(room -> room.getMemberIds().stream())
+                .collect(Collectors.toSet());
+        List<UserProfile> profiles = userProfileRepository.findAllById(profileIds);
+        Map<String, UserProfile> lookupMapProfile = profiles.stream()
+                .collect(Collectors.toMap(UserProfile::getId, Function.identity(), (p1, p2) -> p1));
+
+        Map<String, String> roomNames = rooms.stream().filter(chatRoom -> Strings.isBlank(chatRoom.getChatName()))
+                .collect(Collectors.toMap(
+                        ChatRoom::getId,
+                        chatRoom -> {
+                            List<String> ids = chatRoom.getMemberIds().stream().filter(id -> !id.equals(currentUserId)).limit(4).toList();
+                            List<String> names = ids.stream().filter(id -> Objects.nonNull(lookupMapProfile.get(id)))
+                                    .map(id -> lookupMapProfile.get(id).getFirstName() + " " + lookupMapProfile.get(id).getLastName()).toList();
+                            return String.join(",", names);
+                        }
+                ));
+
+
+        var response = chatRoomMapper.toListResponses(rooms);
+        response.stream().forEach(rsp -> {
+            if(Strings.isBlank(rsp.getChatName())){
+                rsp.setChatName(roomNames.get(rsp.getId()));
+            }
+        });
+
+        return response;
     }
+
+
 
     @Override
     public ChatRoomResponseDetail getUserRoomDetail(String roomId) {
+        String currentUserId = SecurityUtils.getCurrentUserId();
         ChatRoom chatRoom = findChatRoomByIdOrThrowException(roomId);
         List<UserProfile> userProfiles = userProfileRepository.findAllById(chatRoom.getMemberIds());
+        boolean isMember = chatRoom.getMemberIds().stream()
+                .anyMatch(id -> id.equals(currentUserId));
+        if(!isMember){
+            throw new AppException(ChatErrorCode.UNAUTHORIZED);
+        }
+
+        Map<String, String> userProfileNames = userProfiles.stream()
+                .collect(Collectors.toMap(UserProfile::getId,
+        usp -> usp.getFirstName() + " " + usp.getLastName()
+                ,(p1, p2) -> p2));
+        String chatName = "Cine Social";
+        if(Strings.isBlank(chatRoom.getChatName())){
+            List<String> ids = chatRoom.getMemberIds().stream().filter(id -> !id.equals(currentUserId)).limit(4).toList();
+            List<String> names = ids.stream().filter(id -> Objects.nonNull(userProfileNames.get(id))).map(userProfileNames::get).toList();
+            chatName = String.join(",", names);
+        }
         return ChatRoomResponseDetail.builder()
                     .id(chatRoom.getId())
                     .type(chatRoom.getType().name())
-                    .chatName(chatRoom.getChatName())
+                    .chatName(chatName)
                     .imgUrl(chatRoom.getImgUrl())
                     .memberIds(chatRoom.getMemberIds())
                     .members(userProfileMapper.toListResponses(userProfiles))
                     .build();
+    }
+
+    @Override
+    @Transactional
+    public void deleteRoom(String id) {
+        chatMessageRepository.deleteByRoomId(id);
+        chatRoomRepository.deleteById(id);
     }
 
     @Override
@@ -105,8 +159,4 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         );
     }
 
-    private Map<String, UserProfile> getUserProfileMap(List<String> memberIds) {
-        return userProfileRepository.findAllById(memberIds).stream()
-                .collect(Collectors.toMap(UserProfile::getId, Function.identity(), (a, b) -> b));
-    }
 }

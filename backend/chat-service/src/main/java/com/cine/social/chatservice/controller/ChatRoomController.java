@@ -31,6 +31,12 @@ public class ChatRoomController {
         return ApiResponse.success(chatRoomService.updateRoom(request, id));
     }
 
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> deleteChatRom(@PathVariable String id) {
+        chatRoomService.deleteRoom(id);
+        return ApiResponse.success("Delete successfully");
+    }
+
     @GetMapping
     public ApiResponse<List<ChatRoomResponse>> getUserChatRooms() {
         return ApiResponse.success(chatRoomService.getUserRooms());

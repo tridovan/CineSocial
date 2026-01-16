@@ -16,6 +16,7 @@ import com.cine.social.chatservice.service.UserProfileService;
 import com.cine.social.common.dto.response.PageResponse;
 import com.cine.social.common.exception.AppException;
 import com.cine.social.common.utils.PageHelper;
+import com.cine.social.common.utils.SecurityUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,8 +78,16 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public PageResponse<List<ChatMessageResponse>> getChatHistory(String roomId, int pageNo, int pageSize) {
+        String currentUserId = SecurityUtils.getCurrentUserId();
         Pageable pageable = PageHelper.pageEngine(pageNo, pageSize, "timestamp:desc");
         Page<ChatMessage> page = chatMessageRepository.findByRoomId(roomId, pageable);
+        Optional<ChatRoom> optional = chatRoomRepository.findById(roomId);
+        if(optional.isPresent()) {
+            boolean isMember = optional.get().getMemberIds().stream().anyMatch(id -> id.equals(currentUserId));
+            if (!isMember) {
+                throw new AppException(ChatErrorCode.UNAUTHORIZED);
+            }
+        }
 
         Map<String, UserProfile> lookupMap = getUserProfileMap(page.getContent());
         List<ChatMessageResponse> items = mapMessagesToResponses(page.getContent(), lookupMap);

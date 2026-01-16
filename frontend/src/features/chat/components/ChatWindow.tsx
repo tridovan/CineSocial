@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { chatService } from '../services/chatService';
 import { mediaService } from '@/features/media/services/mediaService';
-import type { ChatRoomResponseDetail, ChatMessageResponse } from '../types';
+import type { ChatRoomResponseDetail, ChatMessageResponse, UserResponse } from '../types';
 import { Loader2, MoreVertical, ArrowLeft, Send, Image as ImageIcon, Users } from 'lucide-react';
 import { getFullMediaUrl } from '@/config/media';
 import { ChatMessageItem } from './ChatMessageItem';
@@ -12,9 +12,10 @@ import { useChatWebSocket } from '../hooks/useChatWebSocket';
 interface ChatWindowProps {
     roomId: string;
     onBack: () => void;
+    initialTargetUser?: UserResponse;
 }
 
-export const ChatWindow = ({ roomId, onBack }: ChatWindowProps) => {
+export const ChatWindow = ({ roomId, onBack, initialTargetUser }: ChatWindowProps) => {
     const { token, user } = useAuthStore();
     const [room, setRoom] = useState<ChatRoomResponseDetail | null>(null);
     const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
@@ -64,20 +65,34 @@ export const ChatWindow = ({ roomId, onBack }: ChatWindowProps) => {
         setLoading(true);
         try {
             const [roomRes, historyRes] = await Promise.all([
-                chatService.getChatRoomDetail(roomId),
-                chatService.getChatHistory(roomId, 0, 20)
+                chatService.getChatRoomDetail(roomId).catch(() => null), // Catch 404 or other errors
+                chatService.getChatHistory(roomId, 0, 20).catch(() => null)
             ]);
 
-            if (roomRes.code === 1000) {
+            if (roomRes && roomRes.code === 1000) {
                 setRoom(roomRes.data);
+            } else if (initialTargetUser && user) {
+                // DRAFT MODE: Room doesn't exist yet, but we have target info.
+                // Create a temporary room state so UI renders.
+                setRoom({
+                    id: roomId,
+                    chatName: `${initialTargetUser.firstName} ${initialTargetUser.lastName}`,
+                    type: 'PRIVATE',
+                    imgUrl: initialTargetUser.imgUrl,
+                    memberIds: [user.id!, initialTargetUser.id!],
+                    members: [user as UserResponse, initialTargetUser]
+                });
             }
 
-            if (historyRes.code === 1000) {
+            if (historyRes && historyRes.code === 1000) {
                 const items = historyRes.data.items || [];
                 // API returns [Newest...Oldest].
                 // We want [Oldest...Newest] for proper chat display (Newest at bottom).
                 setMessages(items.reverse());
                 setHasMore(historyRes.data.pageNo < historyRes.data.totalPage - 1);
+            } else {
+                setMessages([]);
+                setHasMore(false);
             }
         } catch (e) {
             console.error("Error fetching room data:", e);

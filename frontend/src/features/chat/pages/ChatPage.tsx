@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ChatRoomList } from '../components/ChatRoomList';
 import { ChatWindow } from '../components/ChatWindow';
 import { MessageCircle } from 'lucide-react';
 
 export const ChatPage = () => {
     const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+    const [initialTargetUser, setInitialTargetUser] = useState<any>(null); // To pass to specific ChatWindow
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.roomId) {
+            setSelectedRoomId(location.state.roomId);
+            if (location.state.targetUser) {
+                setInitialTargetUser(location.state.targetUser);
+            }
+        }
+    }, [location.state]);
 
     return (
         <div className="flex h-[calc(100vh-64px)] -m-4 md:-m-8 bg-gray-50 overflow-hidden">
@@ -22,6 +34,7 @@ export const ChatPage = () => {
                     <ChatWindow
                         roomId={selectedRoomId}
                         onBack={() => setSelectedRoomId(null)}
+                        initialTargetUser={initialTargetUser}
                     />
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-gray-300 p-8 text-center bg-gray-50/50">

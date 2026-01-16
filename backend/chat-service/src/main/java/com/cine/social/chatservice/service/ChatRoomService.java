@@ -16,5 +16,6 @@ public interface ChatRoomService {
 
     ChatRoomResponseDetail getUserRoomDetail(String roomId);
 
+    void deleteRoom(String id);
 }
 
