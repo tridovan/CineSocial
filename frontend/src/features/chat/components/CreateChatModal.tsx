@@ -169,14 +169,16 @@ export const CreateChatModal = ({ isOpen, onClose, onSuccess }: CreateChatModalP
                 }
             }
 
-            if (!chatName.trim()) {
-                toast.error('Group name is required');
-                setCreating(false);
-                return;
-            }
+            // 2. Determine Name (Backend handles null)
+            const finalName = chatName.trim() || null;
+
+            // 3. Create Room (Private or Group)
+            // Note: Private flow is handled above, this is mainly for Group now or fallback
+            // But if we want to support non-deterministic private chat via API (legacy), needed?
+            // The code above handles PRIVATE activeTab return. So this is GROUP only.
 
             const res = await chatService.createChatRoom({
-                chatName: chatName,
+                chatName: finalName,
                 memberIds: selectedUsers.map(u => u.id!),
                 imgUrl: finalImgUrl
             });
@@ -319,7 +321,7 @@ export const CreateChatModal = ({ isOpen, onClose, onSuccess }: CreateChatModalP
                 <div className="p-4 border-t border-gray-100 flex justify-end">
                     <button
                         onClick={handleCreate}
-                        disabled={creating || selectedUsers.length === 0 || (activeTab === 'GROUP' && !chatName.trim())}
+                        disabled={creating || selectedUsers.length === 0}
                         className="bg-brand-red text-white px-8 py-2.5 rounded-full font-bold hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-red/20"
                     >
                         {creating ? <Loader2 className="animate-spin" size={18} /> : (activeTab === 'GROUP' ? 'Create Group' : 'Chat')}

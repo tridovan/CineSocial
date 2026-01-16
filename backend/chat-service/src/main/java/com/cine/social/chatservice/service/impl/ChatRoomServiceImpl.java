@@ -130,9 +130,18 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     @Transactional
-    public void deleteRoom(String id) {
-        chatMessageRepository.deleteByRoomId(id);
-        chatRoomRepository.deleteById(id);
+    public void leaveChatRoom(String id) {
+        String currentUserId = SecurityUtils.getCurrentUserId();
+        ChatRoom chatRoom = chatRoomRepository.findById(id)
+                .orElseThrow( () -> new AppException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
+        if(chatRoom.getType().equals(RoomType.PRIVATE)){
+            throw new AppException(ChatErrorCode.INVALID_ACTION);
+        }
+        if(!chatRoom.getMemberIds().contains(currentUserId)){
+            throw new AppException(ChatErrorCode.UNAUTHORIZED);
+        }
+        chatRoom.getMemberIds().remove(currentUserId);
+        chatRoomRepository.save(chatRoom);
     }
 
     @Override

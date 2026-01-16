@@ -31,10 +31,10 @@ public class ChatRoomController {
         return ApiResponse.success(chatRoomService.updateRoom(request, id));
     }
 
-    @DeleteMapping("/{id}")
-    public ApiResponse<String> deleteChatRom(@PathVariable String id) {
-        chatRoomService.deleteRoom(id);
-        return ApiResponse.success("Delete successfully");
+    @PatchMapping("/{id}/leave")
+    public ApiResponse<String> leaveChatRom(@PathVariable String id) {
+        chatRoomService.leaveChatRoom(id);
+        return ApiResponse.success("Leave room successfully");
     }
 
     @GetMapping

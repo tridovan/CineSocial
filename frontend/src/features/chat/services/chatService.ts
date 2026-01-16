@@ -43,5 +43,11 @@ export const chatService = {
             }
         });
         return response.data;
+    },
+
+    // Leave chat room
+    leaveChatRoom: async (roomId: string) => {
+        const response = await api.patch(`${BASE_URL}/rooms/${roomId}/leave`);
+        return response.data;
     }
 };

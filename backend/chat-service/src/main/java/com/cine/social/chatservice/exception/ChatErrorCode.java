@@ -11,7 +11,8 @@ public enum ChatErrorCode implements ErrorCode {
     UNCATEGORIZED_EXCEPTION(8401, "Internal WebSocket Error", HttpStatus.INTERNAL_SERVER_ERROR),
     USER_ID_NOT_FOUND(8402, "User ID not found" , HttpStatus.BAD_REQUEST),
     CHAT_ROOM_NOT_FOUND(8403,"Chat room not found" , HttpStatus.BAD_REQUEST ),
-    UNAUTHORIZED(8404,"You do not have permission to do this acction" , HttpStatus.FORBIDDEN);
+    UNAUTHORIZED(8404,"You do not have permission to do this acction" , HttpStatus.FORBIDDEN),
+    INVALID_ACTION(8405,"Invalid action", HttpStatus.BAD_REQUEST );
 
 
 

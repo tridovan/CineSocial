@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { X, Users, Trash2, Plus } from 'lucide-react';
+import { X, Users, Trash2, Plus, LogOut } from 'lucide-react';
 import { UserSearchList } from './UserSearchList';
 import { chatService } from '../services/chatService';
 import type { ChatRoomResponseDetail } from '../types';
 import { getFullMediaUrl } from '@/config/media';
 import toast from 'react-hot-toast';
+
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 interface RoomSettingsModalProps {
     isOpen: boolean;
@@ -19,8 +22,10 @@ interface RoomForm {
 }
 
 export const RoomSettingsModal = ({ isOpen, onClose, room, onUpdate }: RoomSettingsModalProps) => {
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [isAddingUser, setIsAddingUser] = useState(false);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
     // Only allow editing name for Groups?
     // User response schema implies standard ChatRoomRequest for update.
@@ -95,6 +100,24 @@ export const RoomSettingsModal = ({ isOpen, onClose, room, onUpdate }: RoomSetti
         } catch (error) {
             console.error("Failed to remove member", error);
             toast.error("Failed to remove member");
+        }
+    };
+
+    const handleLeaveGroup = async () => {
+        try {
+            setIsLoading(true);
+            await chatService.leaveChatRoom(room.id);
+            toast.success("Left group successfully");
+            onClose();
+            setShowLeaveConfirm(false);
+            navigate('/messages');
+            // Force refresh/reload might be needed if state is stale
+            window.location.reload();
+        } catch (error) {
+            console.error("Failed to leave group", error);
+            toast.error("Failed to leave group");
+            setIsLoading(false); // Only stop loading on error, success navigates away
+            setShowLeaveConfirm(false);
         }
     };
 
@@ -184,9 +207,35 @@ export const RoomSettingsModal = ({ isOpen, onClose, room, onUpdate }: RoomSetti
                                 </div>
                             ))}
                         </div>
+
+                        {/* Leave Group Button */}
+                        {isGroup && (
+                            <div className="w-full mt-6 pt-4 border-t border-gray-100">
+                                <button
+                                    onClick={() => setShowLeaveConfirm(true)}
+                                    disabled={isLoading}
+                                    className="w-full flex items-center justify-center gap-2 text-red-500 font-bold py-2 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                    <LogOut size={18} />
+                                    Leave Group
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showLeaveConfirm}
+                onClose={() => setShowLeaveConfirm(false)}
+                onConfirm={handleLeaveGroup}
+                title="Leave Group?"
+                message="Are you sure you want to leave this group? You won't be able to see future messages."
+                confirmText="Leave Group"
+                isDangerous={true}
+                isLoading={isLoading}
+            />
         </div>
     );
 };
