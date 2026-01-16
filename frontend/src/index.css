@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+:root {
+  /* Premium Cinema Palette (Oscar/Cannes Vibe) */
+  --color-brand-red: #D4AF37;
+  /* Primary Gold (replacing Red as main brand color) - Metallic Gold */
+  --color-brand-gold: #1A1A1A;
+  /* Secondary Accent - Deep Rich Black (for contrast with Gold) */
+
+  --color-bg-dark: #f8f9fa;
+  /* Very clean, almost white background (Premium feel) */
+  --color-bg-card: #ffffff;
+
+  --color-text-primary: #121212;
+  --color-text-secondary: #666666;
+}
+
+@theme {
+  --color-brand-red: var(--color-brand-red);
+  /* Now Gold */
+  --color-brand-gold: var(--color-brand-gold);
+  /* Now Black */
+  --color-bg-dark: var(--color-bg-dark);
+  --color-bg-card: var(--color-bg-card);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+}
+
+@layer base {
+  body {
+    @apply bg-bg-dark text-white font-sans antialiased;
+  }
+}

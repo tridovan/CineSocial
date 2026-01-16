@@ -1,0 +1,80 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: identity-service
+          predicates:
+            - Path=/identity/${app.api-version}/**
+          uri: http://localhost:8081
+        - id: post-service
+          predicates:
+            - Path=/post/${app.api-version}/**
+          uri: http://localhost:8082
+        - id: media-service
+          predicates:
+            - Path=/media/${app.api-version}/**
+          uri: http://localhost:8083
+        - id: chat-service
+          predicates:
+            - Path=/chat/${app.api-version}/**
+          uri: http://localhost:8084
+        - id: notification-service
+          predicates:
+            - Path=/notification/${app.api-version}/**
+          uri: http://localhost:8085
+        - id: search-service
+          predicates:
+            - Path=/search/${app.api-version}/**
+          uri: http://localhost:8086
+
+app:
+  api-version: api/v1
+  security:
+    public-post-endpoints:
+      - "/identity/api/v1/auth/token"
+      - "/identity/api/v1/auth/outbound/authentication"
+      - "/identity/api/v1/auth/register"
+      - "/identity/api/v1/auth/logout"
+      - "/identity/api/v1/users/*/wall"
+      - "/search/api/v1/search/post"
+      - "/search/api/v1/search/autocomplete"
+
+    public-get-endpoints:
+      - "/post/api/v1/posts"
+      - "/post/api/v1/posts/reels"
+      - "/swagger-ui.html"
+      - "/swagger-ui/**"
+      - "/v3/api-docs/**"
+      - "/webjars/**"
+      - "/*/api/v1/v3/api-docs"
+
+
+
+jwt:
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
+
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Identity Service
+        url: /identity/api/v1/v3/api-docs
+      - name: Post Service
+        url: /post/api/v1/v3/api-docs
+      - name: Media Service
+        url: /media/api/v1/v3/api-docs
+      - name: Notification Service
+        url: /notification/api/v1/v3/api-docs
+      - name: Chat Service
+        url: /chat/api/v1/v3/api-docs
+      - name: Search Service
+        url: /search/api/v1/v3/api-docs
+  api-docs:
+    path: /v3/api-docs
+    enabled: true

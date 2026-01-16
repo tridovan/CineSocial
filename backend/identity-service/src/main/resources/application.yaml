@@ -1,0 +1,41 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /identity/api/v1
+
+spring:
+  application:
+    name: identity-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/identity_db
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
+  valid-duration-in-second: 36000
+  refreshable-duration-in-second: 36000
+  issuer: "Tri dep trai"
+
+app:
+  security:
+    public-post-endpoints:
+      - "/auth/token"
+      - "/auth/register"
+      - "/auth/logout"
+      - "/internal/users/fetch"
+      - "/auth/outbound/authentication"
+    public-get-endpoints:
+      - "/users/*/wall"
+    internal-api-key: ${INTERNAL_API_KEY:12345678trideptrai}
+
+outbound:
+  oauth2:
+    client-id: ${OAUTH2_CLIENT_ID}
+    client-secret: ${OAUTH2_CLIENT_SECRET}
+    redirect-uri: "http://localhost:5173/authenticate"
+    grant-type: "authorization_code"
