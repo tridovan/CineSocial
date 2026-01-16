@@ -34,19 +34,33 @@ export const ChatMessageItem = ({ message, showAvatar = true }: ChatMessageItemP
                 )}
 
                 {/* Bubble */}
-                <div
-                    className={`px-4 py-2 rounded-2xl text-sm break-words ${isMe
+                {message.content && (
+                    <div
+                        className={`px-4 py-2 rounded-2xl text-sm break-words ${isMe
                             ? 'bg-brand-red text-white rounded-br-none'
                             : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                        }`}
-                >
-                    {message.content}
-                </div>
+                            }`}
+                    >
+                        {message.content}
+                    </div>
+                )}
 
-                {/* Image Attachment */}
+                {/* Attachment (Image or Video) */}
                 {message.contentImgUrl && (
                     <div className="mt-1 rounded-xl overflow-hidden border border-gray-200">
-                        <img src={getFullMediaUrl(message.contentImgUrl)} alt="Attachment" className="max-w-xs max-h-64 object-cover" />
+                        {/\.(mp4|webm|ogg|mov)$/i.test(message.contentImgUrl) ? (
+                            <video
+                                src={getFullMediaUrl(message.contentImgUrl)}
+                                controls
+                                className="max-w-xs max-h-64 object-cover"
+                            />
+                        ) : (
+                            <img
+                                src={getFullMediaUrl(message.contentImgUrl)}
+                                alt="Attachment"
+                                className="max-w-xs max-h-64 object-cover"
+                            />
+                        )}
                     </div>
                 )}
 

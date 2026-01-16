@@ -143,7 +143,7 @@ export const ChatWindow = ({ roomId, onBack, initialTargetUser }: ChatWindowProp
             }
 
             if (uploadedMedia && uploadedMedia.url) {
-                const msgContent = inputText.trim() || "Sent an attachment";
+                const msgContent = inputText.trim();
                 const imgUrl = uploadedMedia.url;
 
                 // Optimistic Update for Media

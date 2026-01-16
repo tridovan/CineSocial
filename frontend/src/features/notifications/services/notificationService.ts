@@ -11,7 +11,8 @@ export const notificationService = {
         return new EventSourcePolyfill(url, {
             headers: {
                 'Authorization': `Bearer ${token}`
-            }
+            },
+            heartbeatTimeout: 120000 // 2 minutes
         }) as unknown as EventSource;
     },
 

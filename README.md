@@ -1,3 +1,5 @@
+Video demo: https://youtu.be/XMoeWGEIr1M
+
 # CineConnect - Microservices Social Network for Movie Lovers
 
 CineConnect is a social networking platform designed for movie enthusiasts where users can:
@@ -17,12 +19,12 @@ The project focuses on complex domain problems such as distributed systems, data
 
 | Service            | Technology Stack                    | Responsibilities |
 |-------------------|-------------------------------------|------------------|
-| Gateway Service    | Gateway Webflux                    | Entry point, JWT Authentication|
+| Gateway Service    | Gateway Webflux                    | Entry point, JWT Authentication, OAuth2|
 | Identity Service   | MySQL, Debezium                    | User profile, Follow/Unfollow, Issue JWT Token |
 | Post Service       | MySQL, Debezium, Kafka              |Posts, Likes, Comments, Reels |
 | Media Service      | MinIO, FFmpeg, Kafka                | Image/video upload, video transcoding (async) |
 | Chat Service       | WebSocket STOMP, MongoDB, Kafka     | Real-time messaging (1-1 & group) |
-| Notification       | SSE, Mongo                         | Push notifications |
+| Notification Serivce| SSE, Mongo                         | Push notifications |
 | Search Service     | Elasticsearch, Kafka                | Full-text search, autocomplete suggestions |
 
 ---
