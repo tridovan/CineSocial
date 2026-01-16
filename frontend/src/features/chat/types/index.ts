@@ -1,7 +1,8 @@
 import type { UserResponse } from '@/features/users/types';
+export type { UserResponse };
 
 export interface ChatRoomRequest {
-    chatName: string;
+    chatName: string | null;
     imgUrl?: string;
     memberIds: string[];
 }

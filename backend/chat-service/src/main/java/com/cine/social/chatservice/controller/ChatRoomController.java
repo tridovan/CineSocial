@@ -31,6 +31,12 @@ public class ChatRoomController {
         return ApiResponse.success(chatRoomService.updateRoom(request, id));
     }
 
+    @PatchMapping("/{id}/leave")
+    public ApiResponse<String> leaveChatRom(@PathVariable String id) {
+        chatRoomService.leaveChatRoom(id);
+        return ApiResponse.success("Leave room successfully");
+    }
+
     @GetMapping
     public ApiResponse<List<ChatRoomResponse>> getUserChatRooms() {
         return ApiResponse.success(chatRoomService.getUserRooms());

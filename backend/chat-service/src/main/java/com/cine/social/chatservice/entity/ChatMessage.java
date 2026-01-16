@@ -16,8 +16,7 @@ import java.util.Date;
 @Builder
 public class ChatMessage {
     @Id
-    @Builder.Default
-    private String id = new ObjectId().toHexString();
+    private String id;
 
     @Indexed
     private String roomId;

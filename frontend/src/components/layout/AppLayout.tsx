@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, MessageCircle, Heart, Search, Bell, LogOut } from 'lucide-react';
+import { Home, User, MessageCircle, Search, Bell, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { NotificationListener } from '@/features/notifications/components/NotificationListener';
+import { getFullMediaUrl } from '@/config/media';
 
 const Sidebar = () => {
-    const logout = useAuthStore((state) => state.logout);
+    const { logout, user } = useAuthStore();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -26,12 +27,42 @@ const Sidebar = () => {
                 <NavLink to="/profile" icon={<User size={24} />} label="Profile" />
             </nav>
 
-            <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 text-gray-600 hover:text-brand-red hover:bg-gray-100 transition-colors mt-auto p-3 rounded-lg border-t border-gray-100"
-            >
-                <LogOut size={24} /> <span className="font-medium">Logout</span>
-            </button>
+            <div className="mt-auto border-t border-gray-100 pt-4">
+                {user && (
+                    <div className="flex items-center gap-3 px-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border border-gray-200">
+                            {user.imgUrl ? (
+                                <img
+                                    src={getFullMediaUrl(user.imgUrl)}
+                                    alt={user.firstName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // Fallback to default icon if image fails
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                />
+                            ) : null}
+                            <div className={`w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 ${user.imgUrl ? 'hidden' : ''}`}>
+                                <User size={20} />
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-gray-900 truncate">
+                                {user.firstName} {user.lastName}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                    </div>
+                )}
+
+                <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 text-gray-600 hover:text-brand-red hover:bg-gray-100 transition-colors p-3 rounded-lg"
+                >
+                    <LogOut size={24} /> <span className="font-medium">Logout</span>
+                </button>
+            </div>
         </aside>
     );
 };

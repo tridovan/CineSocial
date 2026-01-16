@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
     Page<ChatMessage> findByRoomId(String roomId, Pageable pageable);
+
+    void deleteByRoomId(String roomId);
 }

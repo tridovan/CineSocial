@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
+import { chatService } from '@/features/chat/services/chatService';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import type { UserWallProfileResponse } from '../types';
 import { Loader2, User as UserIcon, Check, Edit2, Camera } from 'lucide-react';
@@ -11,6 +12,7 @@ import { getFullMediaUrl } from '@/config/media';
 
 export const UserProfile = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<UserWallProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [following, setFollowing] = useState(false);
@@ -197,7 +199,23 @@ export const UserProfile = () => {
                                             </>
                                         )}
                                     </button>
-                                    <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-semibold transition-all">
+                                    <button
+                                        onClick={() => {
+                                            if (!profile.id || !user?.id) return;
+
+                                            // Deterministic ID generation: sort(ids).join('_')
+                                            const sortedIds = [user.id, profile.id].sort();
+                                            const roomId = sortedIds.join('_');
+
+                                            navigate('/messages', {
+                                                state: {
+                                                    roomId,
+                                                    targetUser: profile // Pass profile for "draft" mode
+                                                }
+                                            });
+                                        }}
+                                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-semibold transition-all"
+                                    >
                                         Message
                                     </button>
                                 </>

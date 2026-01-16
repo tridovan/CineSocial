@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Search, Check, Loader2, Users, Image as ImageIcon, Camera } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Search, Check, Loader2, Camera } from 'lucide-react';
 import { userService } from '@/features/users/services/userService';
 import { chatService } from '../services/chatService';
 import { mediaService } from '@/features/media/services/mediaService';
+import { useAuthStore } from '@/features/auth/stores/authStore';
 import type { UserResponse, UserWallProfileResponse } from '@/features/users/types';
 import { getFullMediaUrl } from '@/config/media';
 import toast from 'react-hot-toast';
@@ -16,6 +18,8 @@ interface CreateChatModalProps {
 type Tab = 'PRIVATE' | 'GROUP';
 
 export const CreateChatModal = ({ isOpen, onClose, onSuccess }: CreateChatModalProps) => {
+    const navigate = useNavigate();
+    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState<Tab>('PRIVATE');
 
     // Common State
@@ -127,12 +131,33 @@ export const CreateChatModal = ({ isOpen, onClose, onSuccess }: CreateChatModalP
             return;
         }
 
+        // PRIVATE CHAT LOGIC (Deterministic)
+        if (activeTab === 'PRIVATE') {
+            if (!user?.id) return;
+            const targetUser = selectedUsers[0];
+
+            // 1. Calculate Deterministic ID
+            const sortedIds = [user.id, targetUser.id!].sort();
+            const roomId = sortedIds.join('_');
+
+            // 2. Navigate (Draft Mode support via state)
+            onClose(); // Close modal first
+            navigate('/messages', {
+                state: {
+                    roomId,
+                    targetUser: targetUser
+                }
+            });
+            onSuccess(); // Optional: trigger parent refresh if needed (usually not for private)
+            return;
+        }
+
+        // GROUP CHAT LOGIC (API Based)
         try {
             setCreating(true);
             let finalImgUrl: string | undefined = undefined;
 
-            // 1. Upload Image if Group
-            if (activeTab === 'GROUP' && groupImage) {
+            if (groupImage) {
                 try {
                     const uploadRes = await mediaService.uploadImage(groupImage);
                     finalImgUrl = uploadRes.url;
@@ -144,21 +169,14 @@ export const CreateChatModal = ({ isOpen, onClose, onSuccess }: CreateChatModalP
                 }
             }
 
-            // 2. Determine Name
-            let finalName = chatName;
-            if (activeTab === 'PRIVATE') {
-                // For private, usually backend determines name or it's dynamic.
-                // But API requires 'chatName'. We can send user name.
-                finalName = `${selectedUsers[0].firstName} ${selectedUsers[0].lastName}`;
-            } else {
-                if (!finalName.trim()) {
-                    toast.error('Group name is required');
-                    setCreating(false);
-                    return;
-                }
-            }
+            // 2. Determine Name (Backend handles null)
+            const finalName = chatName.trim() || null;
 
-            // 3. Create Room
+            // 3. Create Room (Private or Group)
+            // Note: Private flow is handled above, this is mainly for Group now or fallback
+            // But if we want to support non-deterministic private chat via API (legacy), needed?
+            // The code above handles PRIVATE activeTab return. So this is GROUP only.
+
             const res = await chatService.createChatRoom({
                 chatName: finalName,
                 memberIds: selectedUsers.map(u => u.id!),
@@ -303,7 +321,7 @@ export const CreateChatModal = ({ isOpen, onClose, onSuccess }: CreateChatModalP
                 <div className="p-4 border-t border-gray-100 flex justify-end">
                     <button
                         onClick={handleCreate}
-                        disabled={creating || selectedUsers.length === 0 || (activeTab === 'GROUP' && !chatName.trim())}
+                        disabled={creating || selectedUsers.length === 0}
                         className="bg-brand-red text-white px-8 py-2.5 rounded-full font-bold hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-red/20"
                     >
                         {creating ? <Loader2 className="animate-spin" size={18} /> : (activeTab === 'GROUP' ? 'Create Group' : 'Chat')}

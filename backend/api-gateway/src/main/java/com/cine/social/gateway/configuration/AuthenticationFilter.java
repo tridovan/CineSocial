@@ -16,7 +16,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.stereotype.Component;
@@ -44,11 +43,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String token = authHeader.replace("Bearer ", "");
 
         return jwtDecoder.decode(token)
-                .flatMap(jwt -> chain.filter(exchange))
                 .onErrorResume(throwable -> {
                     log.error("Authentication error: {}", throwable.getMessage());
-                    return unauthenticated(exchange.getResponse());
-                });
+                    return unauthenticated(exchange.getResponse()).then(Mono.empty());
+                })
+                .flatMap(jwt -> chain.filter(exchange));
     }
 
     private boolean isPublicEntryPoint(ServerHttpRequest request) {
@@ -72,7 +71,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     Mono<Void> unauthenticated(ServerHttpResponse response){
         ApiResponse<Void> apiResponse = ApiResponse.error(ErrorCode.UNAUTHENTICATED);
 
-        String body = null;
+        String body;
         try {
             body = objectMapper.writeValueAsString(apiResponse);
         } catch (JsonProcessingException e) {
