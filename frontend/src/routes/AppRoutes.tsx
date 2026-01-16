@@ -10,6 +10,7 @@ import { HomePage } from '@/features/posts/pages/HomePage';
 
 import { NotificationPage } from '@/features/notifications/pages/NotificationPage';
 import { ChatPage } from '@/features/chat/pages/ChatPage';
+import { SearchPage } from '@/features/search/pages/SearchPage';
 
 const MyProfileRedirect = () => {
     const { user } = useAuthStore();
@@ -32,7 +33,7 @@ const AppRoutes = () => {
                 <Route path="/profile" element={<MyProfileRedirect />} />
                 <Route path="/me/following" element={<FollowingPage />} />
                 <Route path="/users/:id" element={<UserProfile />} />
-                <Route path="/search" element={<div>Search Page</div>} />
+                <Route path="/search" element={<SearchPage />} />
                 <Route path="/notifications" element={<NotificationPage />} />
                 <Route path="/messages" element={<ChatPage />} />
             </Route>
